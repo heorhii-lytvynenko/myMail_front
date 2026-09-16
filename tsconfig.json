@@ -24,7 +24,22 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "app/*": [
+			"@shared/*": [
+				"app/_shared/*"
+			],
+			"@entities/*": [
+				"app/_entities/*"
+			],
+			"@features/*": [
+				"app/_features/*"
+			],
+			"@widgets/*": [
+				"app/_widgets/*"
+			],
+			"@pages/*": [
+				"app/(pages)/*"
+			],
+      "@app/*": [
         "app/*"
       ],
       "i18n/*": [
