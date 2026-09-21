@@ -1,27 +1,48 @@
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
-import type { ReactNode } from 'react'
-import './globals.css'
+import './(app)/_styles/tailwind.css'
+import './(app)/_styles/globals.scss'
+import type { Metadata, Viewport } from 'next'
+import NextTopLoader from 'nextjs-toploader'
+import { type ReactNode } from 'react'
+import { cn } from '@shared/lib/utils'
+import { defaultLocale } from 'i18n/locales'
+import { getInitialAppData } from './(app)/_lib'
+import { Providers } from './(app)/_providers'
+import { fontVariables } from './(app)/_fonts'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin']
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin']
-})
 
 export const metadata: Metadata = {
-  title: 'myMail Login',
-  description: 'Sign in to myMail'
+	title: 'My mail',
+	description: 'My mail'
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
-  return (
-    <html lang='en' className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
-    </html>
-  )
+export const viewport: Viewport = {
+	initialScale: 1,
+	maximumScale: 1,
+	userScalable: false,
+	viewportFit: 'contain',
+	width: 'device-width'
 }
+
+interface Props {
+	children: ReactNode
+}
+
+const layout = async ({ children }: Props) => {
+	const { account, onboardingState } = await getInitialAppData()
+
+	return (
+		<html className={cn(fontVariables)} lang={defaultLocale}>
+			<body className='antialiased'>
+				<NextTopLoader color='#1d4ed8' shadow={false} showSpinner={false} />
+
+				<Providers account={account} onboardingState={onboardingState}>
+					{/* <Header /> */}
+					<main className='flex flex-col grow'>{children}</main>
+					{/* <Footer /> */}
+				</Providers>
+			</body>
+		</html>
+	)
+}
+
+export default layout

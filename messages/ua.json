@@ -1,5 +1,12 @@
 {
-	"Login": {
-		"title": "Увійти"
+	"auth": {
+		"MyMail": "MyMail",
+		"email": "Електронна пошта",
+		"emailPlaceholder": "Введіть електронну пошту",
+		"password": "Пароль",
+		"passwordPlaceholder": "Введіть пароль",
+		"rememberMe": "Запам'ятати мене",
+		"forgotPassword": "Забули пароль?",
+		"signIn": "Увійти"
 	}
 }

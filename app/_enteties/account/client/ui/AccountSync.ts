@@ -1,7 +1,7 @@
 
-import { useAccountStore } from 'app/(app)/_providers/AccountProvider'
-import { useCookies } from 'app/_shared/lib/hooks'
-import { ACCESS_TOKEN_NAME } from 'app/_shared/lib/utils'
+import { useAccountStore } from '@entities/client'
+import { useCookies } from '@shared/lib/hooks'
+import { ACCESS_TOKEN_NAME } from '@shared/lib/utils/token'
 import { useEffect } from 'react'
 
 export const AccountSync = () => {
