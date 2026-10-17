@@ -104,3 +104,16 @@ The frontend foundation is in place and active development is focused on authent
 ## Author
 
 Developed by [Heorhii Lytvynenko](https://github.com/heorhii-lytvynenko).
+
+## Authentication
+
+Copy `.env.example` to `.env.local` and set `BACKEND_URL` to your backend origin, e.g. `http://localhost:8080` (without `/api`). The existing `NEXT_PUBLIC_BACKEND_URL` variable is also supported as a fallback. Restart the development server after changing environment variables.
+
+- `/login` logs in with `POST /api/authentication/login`.
+- `/register` creates an account with `POST /api/authentication/signIn`.
+- Both send JSON `{ "email": "you@example.com", "password": "your password" }` through same-origin Next.js route handlers. The supplied OpenAPI document describes request bodies only as strings, so these credential fields are an integration assumption that must be confirmed against the backend implementation.
+- The returned access token is stored in an HTTP-only session cookie; production requires HTTPS. The token is used server-side as a Bearer token for `GET /api/users/me`.
+- `/account` displays the authenticated email. Missing or expired sessions return to `/login`.
+- Log out clears the local session. The supplied API does not define token revocation or refresh endpoints.
+
+The active authentication pages do not depend on the earlier onboarding and account providers, which target APIs absent from the supplied specification. Production compilation succeeds, but repository-wide TypeScript checks currently report errors in that unused foundation (including unresolved `@entities` imports and missing shared exports).
