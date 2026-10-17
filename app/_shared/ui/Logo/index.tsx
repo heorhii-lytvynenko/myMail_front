@@ -31,7 +31,7 @@ export const Logo = ({ slotProps, className, ...restProps }: LogoProps) => {
       <LogoIcon {...icon} />
 
       <p className={cn('text-lg', textClassName)} {...restTextProps}>
-        IT Community
+        My mail
       </p>
     </Link>
   )
