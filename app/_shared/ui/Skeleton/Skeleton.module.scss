@@ -1,0 +1,16 @@
+.skeleton {
+  position: relative;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: shimmer-reverse 1.6s infinite linear;
+}
+
+@keyframes shimmer-reverse {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}

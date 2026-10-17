@@ -1,5 +1,12 @@
 {
-  "Login": {
-    "title": "Zaloguj się"
-  }
+	"auth": {
+		"MyMail": "MyMail",
+		"email": "E-mail",
+		"emailPlaceholder": "Wprowadź adres e-mail",
+		"password": "Hasło",
+		"passwordPlaceholder": "Wprowadź hasło",
+		"rememberMe": "Zapamiętaj mnie",
+		"forgotPassword": "Nie pamiętasz hasła?",
+		"signIn": "Zaloguj się"
+	}
 }

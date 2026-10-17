@@ -1,3 +1,4 @@
+import { getInitialAppData } from "@app/(app)/_lib"
 import { Providers } from "app/(app)/_providers"
 import NextTopLoader from "nextjs-toploader"
 import { ReactNode } from "react"
@@ -9,13 +10,15 @@ interface Props {
 
 const layout = async ({ children, params }: Props) => {
 	const { locale } = await params
+	const { account, onboardingState } = await getInitialAppData()
+
 
 	return (
 		<html lang={locale}>
 			<body className='antialiased'>
 				<NextTopLoader color='#1d4ed8' shadow={false} showSpinner={false} />
 
-				<Providers>
+				<Providers account={account} onboardingState={onboardingState}>
 					<main className='flex flex-col grow'>{children}</main>
 				</Providers>
 			</body>
