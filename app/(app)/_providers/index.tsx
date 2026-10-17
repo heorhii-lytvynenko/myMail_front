@@ -1,38 +1,21 @@
-import { NextIntlClientProvider } from 'next-intl'
-import type { PropsWithChildren } from 'react'
-import { Toaster } from '@shared/ui/Toaster'
-import type { AccountType } from '@entities/account'
-import { AccountProvider } from '@entities/client'
-import type { OnboardingStateType } from '@entities/onboarding'
-import { OnboardingProvider } from '@entities/onboarding/client'
-import { CookiesProvider } from './CookiesProvider'
-import { QueryClientProvider } from './QueryClientProvider'
-import { RestorePreviousPageProvider } from './RestorePreviousPageProvider'
+import { NextIntlClientProvider } from "next-intl"
+import { PropsWithChildren } from "react"
+import { AccountProvider } from "./AccountProvider"
+import { AccountType } from "app/_enteties/account"
 
 interface Props {
-  account: AccountType | null
-  onboardingState: OnboardingStateType | null
+	account: AccountType | null
 }
 
 export const Providers = ({
-  account,
-  onboardingState,
-  children
+	children,
+	account
 }: PropsWithChildren<Props>) => {
-  return (
-    <CookiesProvider>
-      <NextIntlClientProvider>
-        <QueryClientProvider>
-          <AccountProvider account={account}>
-            <OnboardingProvider onboardingState={onboardingState}>
-              {children}
-
-              <Toaster />
-              <RestorePreviousPageProvider />
-            </OnboardingProvider>
-          </AccountProvider>
-        </QueryClientProvider>
-      </NextIntlClientProvider>
-    </CookiesProvider>
-  )
+	return (
+		<NextIntlClientProvider>
+			<AccountProvider account={account}>
+				{children}
+			</AccountProvider>
+		</NextIntlClientProvider>
+	)
 }

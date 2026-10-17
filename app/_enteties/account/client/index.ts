@@ -1,1 +1,1 @@
-export * from './ui/AccountSync'
+export * from './'

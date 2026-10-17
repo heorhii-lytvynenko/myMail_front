@@ -27,11 +27,8 @@
 			"@shared/*": [
 				"app/_shared/*"
 			],
-			"@shared/schemas": [
-				"app/_shared/lib/schemas"
-			],
 			"@entities/*": [
-				"app/_enteties/*"
+				"app/_entities/*"
 			],
 			"@features/*": [
 				"app/_features/*"
