@@ -238,3 +238,8 @@ a {
     font-size: 3.2rem;
   }
 }
+
+.auth-panel { width: min(460px, 100%); }
+.auth-error { color: #b91c1c; margin: 0; }
+.auth-link { color: var(--accent-strong); font-weight: 650; }
+.primary-button:disabled { opacity: .65; cursor: wait; }

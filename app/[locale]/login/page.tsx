@@ -1,9 +1,2 @@
-import { getTranslations } from "next-intl/server"
-
-const page = async () => {
-	const t = await getTranslations("Login")
-
-  return <h1>{t('title')}</h1>
-}
-
-export default page;
+import { AuthForm } from 'app/_features/auth/AuthForm'
+export default function LoginPage() { return <AuthForm mode="login" /> }
