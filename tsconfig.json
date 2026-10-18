@@ -24,11 +24,12 @@
     ],
     "baseUrl": ".",
     "paths": {
+			"@shared/schemas": ["app/_shared/lib/schemas"],
 			"@shared/*": [
 				"app/_shared/*"
 			],
 			"@entities/*": [
-				"app/_entities/*"
+				"app/_enteties/*"
 			],
 			"@features/*": [
 				"app/_features/*"
