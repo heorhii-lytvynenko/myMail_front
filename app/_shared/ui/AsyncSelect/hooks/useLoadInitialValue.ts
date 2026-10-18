@@ -18,14 +18,20 @@ interface Options<
   initialIds: AsyncSelectProps<TValue, TMultiple, TData, TKey>['initialIds']
 }
 
-const getIds = (value: SelectValueType<any, any>) => {
+function getIds(value: number | number[] | undefined): number[]
+function getIds(
+  value: SelectOptionType | SelectOptionType[] | null
+): Array<string | number>
+function getIds(
+  value: SelectOptionType | SelectOptionType[] | number | number[] | null | undefined
+): Array<string | number> {
   return (Array.isArray(value) ? value : [value])
     .map((value) =>
-      typeof value === 'object' && Object.hasOwn(value, 'id')
+      typeof value === 'object' && value !== null && Object.hasOwn(value, 'id')
         ? value?.id
         : value
     )
-    .filter((v) => !!v)
+    .filter((v): v is string | number => !!v)
 }
 
 export const useLoadInitialValue = <

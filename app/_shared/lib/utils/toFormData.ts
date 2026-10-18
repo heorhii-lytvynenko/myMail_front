@@ -1,4 +1,4 @@
-import { isType } from '@shared/lib/utils'
+import { isType } from './isType'
 
 const appendValue = (formData: FormData, key: string, value: unknown): void => {
   if (isType.nil(value)) return
@@ -18,9 +18,7 @@ const appendValue = (formData: FormData, key: string, value: unknown): void => {
   }
 }
 
-export const toFormData = <T extends Record<string, any>>(
-  data: T
-): FormData => {
+export const toFormData = <T extends object>(data: T): FormData => {
   const formData = new FormData()
 
   Object.entries(data).forEach(([key, value]) => {
