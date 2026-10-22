@@ -117,6 +117,12 @@ Copy `.env.example` to `.env.local`. Set server-only `BACKEND_URL` to the backen
 - Logout always removes local session/transaction/legacy cookies. With `BACKEND_LOGOUT_ENABLED=true`, it also attempts the documented backend invalidation endpoint. Immediate server-side invalidation depends on the backend implementation and successful delivery.
 - English, Polish, and Ukrainian routes are supported for login, registration, and account pages, including localized navigation and errors.
 
+## Account dashboard
+
+After logging in or registering, `/account` opens a responsive dashboard built with Tailwind and the shared `Card`, `Button`, `Avatar`, `IconBox`, `Icon`, and `Spinner` components. It shows the signed-in email, Gmail connection status, and connect, reconnect, disconnect, and logout actions. English, Polish, and Ukrainian messages live in `messages/*.json` and use `next-intl`.
+
+The connection button is disabled when Google integration is not configured. To enable it, deploy the compatible backend and configure the server-only environment variables described below.
+
 ## Google / Gmail integration
 
 This connects Gmail read access to an existing myMail account. It does not implement Google sign-in.

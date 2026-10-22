@@ -2,9 +2,10 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useTranslations } from 'next-intl'
 import type { AppLocale } from 'i18n/locales'
 import { credentialSchema, registrationSchema } from './contracts'
-import { authCopy, errorCopy } from './copy'
+import { errorCopy } from './errors'
 import { authPath } from './navigation'
 import { okSchema, requestJson, RequestError } from './request'
 import { SessionMonitor } from './SessionMonitor'
@@ -12,7 +13,7 @@ import { SessionMonitor } from './SessionMonitor'
 type FieldErrors = Partial<Record<'email' | 'password' | 'confirmPassword', string>>
 export function AuthForm({ mode, locale, expired = false }: { mode: 'login' | 'register'; locale?: AppLocale; expired?: boolean }) {
   const signingUp = mode === 'register'
-  const copy = authCopy(locale)
+  const t = useTranslations('auth')
   const router = useRouter()
   const submitting = useRef(false)
   const formRef = useRef<HTMLFormElement>(null)
@@ -39,9 +40,9 @@ export function AuthForm({ mode, locale, expired = false }: { mode: 'login' | 'r
       const errors: FieldErrors = {}
       for (const issue of parsed.error.issues) {
         const field = issue.path[0]
-        if (field === 'email') errors.email = copy.invalidEmail
-        if (field === 'password') errors.password = signingUp ? copy.shortPassword : copy.invalidPassword
-        if (field === 'confirmPassword') errors.confirmPassword = copy.mismatch
+        if (field === 'email') errors.email = t('invalidEmail')
+        if (field === 'password') errors.password = signingUp ? t('shortPassword') : t('invalidPassword')
+        if (field === 'confirmPassword') errors.confirmPassword = t('mismatch')
       }
       setFields(errors)
       submitting.current = false
@@ -57,12 +58,12 @@ export function AuthForm({ mode, locale, expired = false }: { mode: 'login' | 'r
     } catch (failure) {
       if (failure instanceof RequestError) {
         const errors: FieldErrors = {}
-        if (failure.fields.email) errors.email = copy.invalidEmail
-        if (failure.fields.password) errors.password = signingUp ? copy.shortPassword : copy.invalidPassword
-        if (failure.fields.confirmPassword) errors.confirmPassword = copy.mismatch
+        if (failure.fields.email) errors.email = t('invalidEmail')
+        if (failure.fields.password) errors.password = signingUp ? t('shortPassword') : t('invalidPassword')
+        if (failure.fields.confirmPassword) errors.confirmPassword = t('mismatch')
         setFields(errors)
-        if (!Object.keys(errors).length) setError(errorCopy(failure.code, copy))
-      } else setError(copy.unavailable)
+        if (!Object.keys(errors).length) setError(errorCopy(failure.code, t))
+      } else setError(t('unavailable'))
     } finally {
       if (!navigating) { submitting.current = false; setPending(false) }
     }
@@ -71,24 +72,24 @@ export function AuthForm({ mode, locale, expired = false }: { mode: 'login' | 'r
     {expired && <SessionMonitor locale={locale} recover />}
     <section className="login-panel auth-panel" aria-labelledby="auth-title">
       <Link href={authPath('login', locale)} className="login-kicker">myMail</Link>
-      <div className="login-heading"><h1 className="login-title" id="auth-title">{signingUp ? copy.create : copy.welcome}</h1>
-        <p className="login-copy">{signingUp ? copy.registerCopy : copy.loginCopy}</p></div>
-      {expired && <p role="status" className="login-copy">{copy.expired}</p>}
+      <div className="login-heading"><h1 className="login-title" id="auth-title">{signingUp ? t('create') : t('welcome')}</h1>
+        <p className="login-copy">{signingUp ? t('registerCopy') : t('loginCopy')}</p></div>
+      {expired && <p role="status" className="login-copy">{t('expired')}</p>}
       <form className="login-form" ref={formRef} onSubmit={submit} aria-busy={pending} noValidate>
-        <div className="field"><label htmlFor="email">{copy.email}</label>
+        <div className="field"><label htmlFor="email">{t('email')}</label>
           <input id="email" name="email" type="email" autoComplete="email" inputMode="email" maxLength={254} placeholder="you@example.com" required disabled={pending} aria-invalid={!!fields.email} aria-describedby={fields.email ? 'email-error' : undefined} />
           {fields.email && <p id="email-error" className="auth-error">{fields.email}</p>}</div>
-        <div className="field"><label htmlFor="password">{copy.password}</label>
+        <div className="field"><label htmlFor="password">{t('password')}</label>
           <input id="password" name="password" type="password" autoComplete={signingUp ? 'new-password' : 'current-password'} minLength={signingUp ? 8 : 1} maxLength={1024} required disabled={pending} aria-invalid={!!fields.password} aria-describedby={[signingUp ? 'password-hint' : '', fields.password ? 'password-error' : ''].filter(Boolean).join(' ') || undefined} />
-          {signingUp && <p id="password-hint" className="login-copy field-hint">{copy.passwordHint}</p>}
+          {signingUp && <p id="password-hint" className="login-copy field-hint">{t('passwordHint')}</p>}
           {fields.password && <p id="password-error" className="auth-error">{fields.password}</p>}</div>
-        {signingUp && <div className="field"><label htmlFor="confirmPassword">{copy.confirmation}</label>
+        {signingUp && <div className="field"><label htmlFor="confirmPassword">{t('confirmation')}</label>
           <input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" maxLength={1024} required disabled={pending} aria-invalid={!!fields.confirmPassword} aria-describedby={fields.confirmPassword ? 'confirmation-error' : undefined} />
           {fields.confirmPassword && <p id="confirmation-error" className="auth-error">{fields.confirmPassword}</p>}</div>}
         {error && <p className="auth-error" role="alert" ref={alertRef} tabIndex={-1}>{error}</p>}
-        <button className="primary-button" type="submit" disabled={pending}>{pending ? copy.waiting : signingUp ? copy.register : copy.login}</button>
+        <button className="primary-button" type="submit" disabled={pending}>{pending ? t('waiting') : signingUp ? t('register') : t('login')}</button>
       </form>
-      <p className="login-copy">{signingUp ? copy.existing : copy.newUser} <Link className="auth-link" href={authPath(signingUp ? 'login' : 'register', locale)}>{signingUp ? copy.login : copy.register}</Link></p>
+      <p className="login-copy">{signingUp ? t('existing') : t('newUser')} <Link className="auth-link" href={authPath(signingUp ? 'login' : 'register', locale)}>{signingUp ? t('login') : t('register')}</Link></p>
     </section>
   </main>
 }

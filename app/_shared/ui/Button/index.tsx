@@ -14,6 +14,7 @@ export const buttonVariants = cva(
     [&_svg]:text-[currentColor]
     aria-disabled:pointer-events-none
     data-[loading=true]:pointer-events-none
+    focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
   `,
   {
     variants: {
@@ -157,14 +158,14 @@ export const Button = <
       {...props}
     >
       {loading ? (
-        <Spinner {...spinnerProps} />
+        <Spinner aria-hidden="true" {...spinnerProps} />
       ) : (
-        iconLeft && <Icon name={iconLeft} />
+        iconLeft && <Icon name={iconLeft} aria-hidden="true" />
       )}
 
       {children && <span className='line-clamp-1'>{children}</span>}
 
-      {iconRight && <Icon name={iconRight} />}
+      {iconRight && <Icon name={iconRight} aria-hidden="true" />}
     </Component>
   )
 }
