@@ -1,4 +1,3 @@
-export * from './token'
 export * from './cn'
 export * from './fetch'
 export * from './helpers'

@@ -1,7 +1,6 @@
 import parse from 'html-react-parser'
 import { type Config as DOMPurifyConfig } from 'isomorphic-dompurify'
 import { useMemo, createElement, type ElementType } from 'react'
-import { useLatestRef } from '@shared/lib/hooks'
 import { DEFAULT_PURIFY_CONFIG } from './lib/const/purify'
 import { DEFAULT_TRANSFORMS } from './lib/const/transforms'
 import { buildReplace, sanitiseHtml } from './lib/utils'
@@ -25,8 +24,6 @@ export const ParseHtml = <T extends ElementType | null = 'div'>({
   trim = true,
   ...restProps
 }: ParseHtmlProps<T>) => {
-  const sanitizeConfigRef = useLatestRef(sanitizeConfig)
-  const transformsRef = useLatestRef(transforms)
 
   const cleanHtml = useMemo(() => {
     if (!html) return ''
@@ -34,13 +31,13 @@ export const ParseHtml = <T extends ElementType | null = 'div'>({
 
     return sanitiseHtml(html, {
       ...DEFAULT_PURIFY_CONFIG,
-      ...sanitizeConfigRef.current
+      ...sanitizeConfig
     })
-  }, [html, sanitize])
+  }, [html, sanitize, sanitizeConfig])
 
   const replace = useMemo(() => {
-    return buildReplace({ ...DEFAULT_TRANSFORMS, ...transformsRef.current })
-  }, [])
+    return buildReplace({ ...DEFAULT_TRANSFORMS, ...transforms })
+  }, [transforms])
 
   const content = useMemo(() => {
     return parse(cleanHtml, { replace, trim })

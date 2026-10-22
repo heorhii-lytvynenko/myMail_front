@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useDebounce, useIsTouch, useSearchParams } from '@shared/lib/hooks'
 
 interface UseFilterInputOptions {
@@ -19,27 +19,16 @@ export const useFilterInput = ({
   const paramValue = name ? (getSearchParam(name) ?? '') : ''
   const [value, setValue] = useState(() => normalize(paramValue))
 
-  useEffect(() => {
-    const next = normalize(paramValue)
+  const [previousParam, setPreviousParam] = useState(paramValue)
+  if (previousParam !== paramValue) {
+    setPreviousParam(paramValue)
+    setValue(normalize(paramValue))
+  }
 
-    if (next !== value) {
-      setValue(next)
-    }
-  }, [paramValue])
-
-  useDebounce(
-    () => {
-      if (!name || (isTouch && !updateParamForTouch)) return
-
-      const prevValue = getSearchParam(name) ?? ''
-
-      if (prevValue !== value) {
-        setSearchParam(name, value)
-      }
-    },
-    [name, value, updateParamForTouch],
-    debounceDelay
-  )
+  useDebounce(useCallback(() => {
+    if (!name || (isTouch && !updateParamForTouch)) return
+    if ((getSearchParam(name) ?? '') !== value) setSearchParam(name, value)
+  }, [name, isTouch, updateParamForTouch, getSearchParam, setSearchParam, value]), debounceDelay)
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {

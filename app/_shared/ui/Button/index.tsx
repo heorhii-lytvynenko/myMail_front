@@ -101,7 +101,7 @@ export const buttonVariants = cva(
 
 export type ButtonElementType = 'a' | 'button' | 'div'
 export type AdditionalButtonPropsType<
-  T extends ButtonElementType | React.ComponentType<any>
+  T extends React.ElementType
 > = T extends keyof React.JSX.IntrinsicElements
   ? React.JSX.IntrinsicElements[T]
   : React.ComponentPropsWithoutRef<T>
@@ -116,14 +116,14 @@ export interface BaseButtonProps extends VariantProps<typeof buttonVariants> {
   spinnerProps?: SpinnerProps
 }
 export type ButtonProps<
-  T extends ButtonElementType | React.ComponentType<any> = 'button'
+  T extends React.ElementType = 'button'
 > = {
   as?: T
 } & BaseButtonProps &
   AdditionalButtonPropsType<T>
 
 export const Button = <
-  T extends ButtonElementType | React.ComponentType<any> = 'button'
+  T extends React.ElementType = 'button'
 >({
   as,
   className,

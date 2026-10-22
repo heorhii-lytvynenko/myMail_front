@@ -12,7 +12,7 @@ export const isType = {
     )
   },
 
-  function: (v: unknown): v is (...args: any[]) => unknown => {
+  function: (v: unknown): v is (...args: unknown[]) => unknown => {
     return typeof v === 'function'
   },
 
@@ -25,7 +25,7 @@ export const isType = {
   },
 
   undefined: (v: unknown): v is undefined => {
-    return typeof v === undefined
+    return v === undefined
   },
 
   null: (v: unknown): v is null => {

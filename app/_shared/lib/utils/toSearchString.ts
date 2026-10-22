@@ -1,5 +1,5 @@
 export const toSearchString = (
-  params: Record<string, any> | undefined
+  params: Record<string, unknown> | undefined
 ): string => {
   if (!params) return ''
 

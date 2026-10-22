@@ -1,2 +1,4 @@
-import { AuthForm } from 'app/_features/auth/AuthForm'
-export default function LoginPage() { return <AuthForm mode="login" /> }
+import { AuthPage } from 'app/_features/auth/AuthPage'
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ reason?: string }> }) {
+  return <AuthPage mode="login" reason={(await searchParams).reason} />
+}

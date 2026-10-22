@@ -35,15 +35,15 @@ export const useLoadOptions = <
   } = queryOptions
 
   const { data, isPending, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteQuery<TData, Error, InfiniteData<TData>, string[], number>({
-      queryKey: [...optionsQueryKey, debouncedSearch],
-      queryFn: async (context: any) => {
+    useInfiniteQuery<TData, Error, InfiniteData<TData>, [...TKey, string], number>({
+      queryKey: [...optionsQueryKey, debouncedSearch] as [...TKey, string],
+      queryFn: async (context) => {
         const { data } = await optionsQueryFn({
           ...context,
           filters: {
-            search,
+            search: debouncedSearch,
             pageSize: 20,
-            pageNumber: context.pageParam
+            page: context.pageParam
           }
         })
 
@@ -54,7 +54,7 @@ export const useLoadOptions = <
       getPreviousPageParam: getPreviousPageParam,
       enabled: optionsQueryEnabled,
       ...restInfinityOptions
-    } as any)
+    })
 
   return {
     options: data?.pages.flatMap((page) => page.pageElements) || EMPTY_ARRAY,

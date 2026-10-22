@@ -26,8 +26,8 @@ import { NoData } from '../NoData'
 import { useInitialInfiniteList } from './InitialInfiniteListProvider'
 
 interface Props<
-  TData extends PaginatedResponse<any> = PaginatedResponse<any>,
-  TSchema extends ZodObject<any> = ZodObject<any>
+  TData extends PaginatedResponse<unknown> = PaginatedResponse<unknown>,
+  TSchema extends ZodObject = ZodObject
 > {
   getQueryKey: (filters: z.infer<TSchema>) => string[]
   infinityOptions: Omit<
@@ -58,8 +58,8 @@ interface Props<
 }
 
 export const InfiniteList = <
-  TData extends PaginatedResponse<any> = PaginatedResponse<any>,
-  TSchema extends ZodObject<any> = ZodObject<any>
+  TData extends PaginatedResponse<unknown> = PaginatedResponse<unknown>,
+  TSchema extends ZodObject = ZodObject
 >({
   infinityOptions,
   getQueryKey,
@@ -69,7 +69,7 @@ export const InfiniteList = <
   schema
 }: Props<TData, TSchema>) => {
   const params = useSearchParams()
-  const initialData = useInitialInfiniteList()
+  const initialData = useInitialInfiniteList<TData>()
   const filters = schema.parse(Object.fromEntries(params.entries()))
   const { queryFn, ...restInfinityOptions } = infinityOptions
   const { noData, loadMoreButton } = slotProps ?? {}
@@ -95,7 +95,7 @@ export const InfiniteList = <
       getNextPageParam: getNextPageParam,
       getPreviousPageParam: getPreviousPageParam,
       ...restInfinityOptions
-    } as any)
+    })
 
   const fullData =
     data?.pages.flatMap((page) => page.pageElements) || EMPTY_ARRAY

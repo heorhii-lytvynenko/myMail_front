@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit --incremental false",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint:auth": "eslint app/_features/auth app/_features/google-integration app/api app/account \"app/(guest)\" \"app/[locale]\" app/page.tsx app/error.tsx app/layout.tsx proxy.ts app/_shared/lib/utils/fetch.ts app/_shared/lib/config/fetch.ts app/_shared/lib/schemas/validators.ts app/_enteties/server app/_enteties/onboarding/server app/_enteties/account/client/ui/AccountSync.ts app/_enteties/client/ui/AccountSync.ts tests scripts/smoke.mjs vitest.config.mts --no-cache",
+    "test:smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",
@@ -21,7 +26,7 @@
     "dayjs": "^1.11.23",
     "html-react-parser": "^6.1.8",
     "isomorphic-dompurify": "^3.19.0",
-    "next": "16.3.4",
+    "next": "16.4.2",
     "next-intl": "^4.14.5",
     "nextjs-toploader": "^3.9.17",
     "react": "19.2.8",
@@ -39,16 +44,24 @@
   "devDependencies": {
     "@svgr/webpack": "^8.1.0",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
+    "@types/node": "^22.20.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.3.4",
+    "eslint-config-next": "16.4.2",
+    "jsdom": "^29.1.1",
     "sass": "^1.105.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.0.5"
   },
   "overrides": {
     "@swc/core": "1.16.2"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

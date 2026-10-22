@@ -1,29 +1,10 @@
 'use client'
 import { toast } from 'sonner'
-import { isType } from './isType'
 
-const getErrorMessage = (error: any) => {
-  const fallbackMessage = 'Unknown error'
-
-  if (!Object.hasOwn(error, 'message')) {
-    return fallbackMessage
-  }
-
-  const message = error.message
-
-  if (isType.string(message)) {
-    return message
-  }
-
-  if (isType.array(message)) {
-    return message.join(', ')
-  }
-
-  return fallbackMessage
+const getErrorMessage = (error: unknown): string => {
+  if (!error || typeof error !== 'object' || !('message' in error)) return 'Unknown error'
+  if (typeof error.message === 'string') return error.message
+  if (Array.isArray(error.message)) return error.message.filter(value => typeof value === 'string').join(', ') || 'Unknown error'
+  return 'Unknown error'
 }
-
-export const errorHandler = (error: any) => {
-  const message = getErrorMessage(error)
-
-  toast.error(message)
-}
+export const errorHandler = (error: unknown) => toast.error(getErrorMessage(error))

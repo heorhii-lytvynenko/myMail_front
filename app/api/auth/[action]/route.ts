@@ -1,39 +1,52 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { backendUrl, SESSION_COOKIE } from 'app/_features/auth/session'
+import { NextRequest } from 'next/server'
+import { credentialSchema, registrationSchema, tokenResponseSchema } from 'app/_features/auth/contracts'
+import { backendFetch, privateJson, retryAfter, sameOrigin, serviceFailure } from 'app/_features/auth/http'
+import { clearSession, cookieOptions, getSessionToken, SESSION_COOKIE, sessionLifetime } from 'app/_features/auth/session'
+import { clearGoogleTransaction } from 'app/_features/google-integration/oauth'
 
 export async function POST(request: NextRequest, context: { params: Promise<{ action: string }> }) {
-  if (request.headers.get('origin') !== request.nextUrl.origin) {
-    return NextResponse.json({ message: 'Invalid request origin.' }, { status: 403 })
-  }
+  if (!sameOrigin(request)) return privateJson({ message: 'Invalid request origin.' }, 403)
   const { action } = await context.params
   if (action === 'logout') {
-    const response = NextResponse.json({ ok: true })
-    response.cookies.set(SESSION_COOKIE, '', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 0 })
-    return response
+    const token = await getSessionToken()
+    // Enable backend revocation only after deploying the documented contract.
+    if (token && process.env.BACKEND_LOGOUT_ENABLED === 'true') {
+      try {
+        await backendFetch('/api/authentication/logout', { method: 'POST', headers: { Authorization: `Bearer ${token}` } }, 3000)
+      } catch { /* Local logout must work even during a backend outage. */ }
+    }
+    return clearGoogleTransaction(clearSession(privateJson({ ok: true })))
   }
-  if (action !== 'login' && action !== 'register') return NextResponse.json({ message: 'Not found.' }, { status: 404 })
-  let body: { email?: unknown; password?: unknown; confirmPassword?: unknown }
-  try { body = await request.json() } catch { return NextResponse.json({ message: 'Invalid request.' }, { status: 400 }) }
-  const email = typeof body?.email === 'string' ? body.email.trim() : ''
-  const password = typeof body?.password === 'string' ? body.password : ''
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !password || (action === 'register' && password !== body.confirmPassword)) {
-    return NextResponse.json({ message: 'Enter a valid email and password. Password confirmation must match.' }, { status: 400 })
+  if (action !== 'login' && action !== 'register') return privateJson({ message: 'Not found.' }, 404)
+  let body: unknown
+  try { body = await request.json() } catch { return privateJson({ message: 'Enter valid account details.' }, 400) }
+  const parsed = (action === 'register' ? registrationSchema : credentialSchema).safeParse(body)
+  if (!parsed.success) {
+    const fields: Record<string, string> = {}
+    for (const issue of parsed.error.issues) {
+      const field = String(issue.path[0])
+      fields[field] = field === 'email' ? 'EMAIL_INVALID' : field === 'confirmPassword' ? 'PASSWORD_MISMATCH' : 'PASSWORD_INVALID'
+    }
+    return privateJson({ code: 'VALIDATION_ERROR', fields }, 400)
   }
+  const { email, password } = parsed.data
   try {
-    const upstream = await fetch(backendUrl(`/api/authentication/${action === 'register' ? 'signIn' : 'login'}`), {
-      method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ email, password }), cache: 'no-store', signal: AbortSignal.timeout(15000)
+    const upstream = await backendFetch(`/api/authentication/${action === 'register' ? 'signIn' : 'login'}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }),
     })
     if (!upstream.ok) {
-      const message = upstream.status === 401 ? 'Incorrect email or password.' : upstream.status === 409 ? 'An account with this email already exists. Please log in.' : 'Authentication failed. Please try again.'
-      return NextResponse.json({ message }, { status: upstream.status >= 400 && upstream.status < 500 ? upstream.status : 502 })
+      const code = upstream.status === 401 ? 'INVALID_CREDENTIALS' : upstream.status === 409 ? 'ACCOUNT_EXISTS' :
+        upstream.status === 429 ? 'RATE_LIMITED' : upstream.status === 400 ? 'REGISTRATION_REJECTED' :
+        upstream.status === 403 ? 'FORBIDDEN' : 'SERVICE_UNAVAILABLE'
+      return privateJson({ code }, upstream.status >= 400 && upstream.status < 500 ? upstream.status : 502, retryAfter(upstream))
     }
-    const data: { accessToken?: string; tokenType?: string } = await upstream.json()
-    if (typeof data.accessToken !== 'string' || !data.accessToken) throw new Error('Missing access token')
-    const response = NextResponse.json({ ok: true }, { status: action === 'register' ? 201 : 200 })
-    response.cookies.set(SESSION_COOKIE, data.accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' })
+    const token = tokenResponseSchema.parse(await upstream.json())
+    const maxAge = sessionLifetime(token.accessToken, token.expiresIn)
+    const response = clearGoogleTransaction(privateJson({ ok: true }, action === 'register' ? 201 : 200))
+    response.cookies.set(SESSION_COOKIE, token.accessToken, { ...cookieOptions(), maxAge })
+    for (const name of ['access_token', 'refresh_token']) response.cookies.set(name, '', { ...cookieOptions(), maxAge: 0 })
     return response
-  } catch {
-    return NextResponse.json({ message: 'Cannot reach the authentication service. Please try again shortly.' }, { status: 502 })
+  } catch (error) {
+    return serviceFailure(error)
   }
 }

@@ -36,7 +36,7 @@ export const getSelectNextValue = <
 
     if (exists) {
       return current.filter((v) => {
-        const isFixed = fixed.some((f: any) => f.id === (v as any).id)
+        const isFixed = fixed.some(f => f.id === v.id)
 
         return isFixed || !isSameOption(v, option)
       }) as SelectValueType<TValue, TMultiple>
@@ -46,7 +46,7 @@ export const getSelectNextValue = <
   }
 
   const current = prev as TValue | null
-  let nextValue: TValue | null = isSameOption(current, option) ? null : option
+  const nextValue: TValue | null = isSameOption(current, option) ? null : option
 
   if (fixedValue && !nextValue) {
     return current as SelectValueType<TValue, TMultiple>

@@ -23,7 +23,7 @@ export const QueryClientProvider = ({ children }: PropsWithChildren) => {
           }
         },
         queryCache: new QueryCache({
-          onError: (error: any) => {
+          onError: (error) => {
             toast.error(error.message)
           }
         })

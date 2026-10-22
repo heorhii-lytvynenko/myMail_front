@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useEffect } from 'react'
 
 interface ParallaxLayer {
   ref: React.RefObject<HTMLElement | null>
@@ -24,7 +24,7 @@ export const useParallax = ({
   const current = useRef({ x: 0, y: 0 })
   const target = useRef({ x: 0, y: 0 })
 
-  const animate = useCallback(() => {
+  const animate = useCallback(function animateFrame() {
     rafRef.current = null
 
     current.current.x += (target.current.x - current.current.x) * ease
@@ -44,7 +44,7 @@ export const useParallax = ({
     const dy = Math.abs(current.current.y - target.current.y)
 
     if (dx > threshold || dy > threshold) {
-      rafRef.current = requestAnimationFrame(animate)
+      rafRef.current = requestAnimationFrame(animateFrame)
     }
   }, [layers, strength, ease, invert, threshold])
 
@@ -63,6 +63,8 @@ export const useParallax = ({
     target.current = { x: 0, y: 0 }
     if (!rafRef.current) rafRef.current = requestAnimationFrame(animate)
   }, [animate])
+
+  useEffect(() => () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current) }, [])
 
   return { onMouseMove, onMouseLeave }
 }

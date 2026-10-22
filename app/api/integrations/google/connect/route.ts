@@ -1,41 +1,34 @@
-import { cookies } from 'next/headers'
-import { NextRequest, NextResponse } from 'next/server'
-import { backendUrl, SESSION_COOKIE } from '@features/auth/session'
+import { NextRequest } from 'next/server'
+import { z } from 'zod'
+import { frontendOrigin, googleIntegrationEnabled } from 'app/_features/auth/config'
+import { backendFetch, privateJson, requestOrigin, sameOrigin, serviceFailure } from 'app/_features/auth/http'
+import { cookieOptions, getSessionToken } from 'app/_features/auth/session'
+import { googleAuthorizationSchema } from 'app/_features/google-integration/contracts'
+import { createPkce, googleCookieName, googleRedirectUri, sealTransaction, sessionBinding, validateAuthorizationUrl } from 'app/_features/google-integration/oauth'
+import { googleFailure } from 'app/_features/google-integration/server'
 
 export async function POST(request: NextRequest) {
-  if (request.headers.get('origin') !== request.nextUrl.origin) {
-    return NextResponse.json({ message: 'Invalid request origin.' }, { status: 403 })
-  }
-
-  const token = (await cookies()).get(SESSION_COOKIE)?.value
-  if (!token) {
-    return NextResponse.json({ message: 'Please log in to connect Google.' }, { status: 401 })
-  }
-
+  if (!sameOrigin(request)) return privateJson({ message: 'Invalid request origin.' }, 403)
+  if (!googleIntegrationEnabled()) return privateJson({ code: 'GOOGLE_UNAVAILABLE' }, 503)
+  const token = await getSessionToken()
+  if (!token) return privateJson({ code: 'SESSION_EXPIRED' }, 401)
+  let body: { locale?: 'en' | 'pl' | 'ua' }
+  try { body = z.object({ locale: z.enum(['en', 'pl', 'ua']).optional() }).parse(await request.json()) }
+  catch { return privateJson({ code: 'VALIDATION_ERROR' }, 400) }
   try {
-    // Read the OAuth redirect without forwarding the Bearer token to Google.
-    const response = await fetch(backendUrl('/integrations/google/connect'), {
-      headers: { Authorization: `Bearer ${token}` },
-      redirect: 'manual',
-      cache: 'no-store',
-      signal: AbortSignal.timeout(15000)
+    if (requestOrigin(request) !== frontendOrigin()) return privateJson({ message: 'Google connection is unavailable on this address.' }, 403)
+    const { verifier, challenge } = createPkce()
+    const upstream = await backendFetch('/integrations/google/authorize', {
+      method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ redirectUri: googleRedirectUri(), codeChallenge: challenge, codeChallengeMethod: 'S256' }),
     })
-
-    if (response.status === 401) {
-      return NextResponse.json({ message: 'Your session expired. Please log in again.' }, { status: 401 })
-    }
-    if (response.status !== 302) {
-      return NextResponse.json({ message: 'Google connection is unavailable. Please try again.' }, { status: 502 })
-    }
-
-    const location = response.headers.get('location')
-    const url = location ? new URL(location) : null
-    if (!url || url.protocol !== 'https:' || url.hostname !== 'accounts.google.com' || url.username || url.password) {
-      return NextResponse.json({ message: 'The backend returned an invalid Google authorization URL.' }, { status: 502 })
-    }
-
-    return NextResponse.json({ url: url.toString() }, { headers: { 'Cache-Control': 'no-store' } })
-  } catch {
-    return NextResponse.json({ message: 'Cannot reach the Google connection service. Please try again.' }, { status: 502 })
-  }
+    if (!upstream.ok) return googleFailure(upstream)
+    const data = googleAuthorizationSchema.parse(await upstream.json())
+    const url = validateAuthorizationUrl(data.authorizationUrl, data.state, challenge)
+    const sealed = sealTransaction({ state: data.state, verifier, binding: sessionBinding(token),
+      expiresAt: Date.now() + data.expiresIn * 1000, locale: body.locale })
+    const response = privateJson({ url })
+    response.cookies.set(googleCookieName(), sealed, { ...cookieOptions(), maxAge: data.expiresIn })
+    return response
+  } catch (error) { return serviceFailure(error) }
 }

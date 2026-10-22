@@ -7,7 +7,7 @@ export const useSkipGuards = () => {
 
   useEffect(() => {
     return () => setQuardsToSkip([])
-  }, [])
+  }, [setQuardsToSkip])
 
   return { setQuardsToSkip }
 }

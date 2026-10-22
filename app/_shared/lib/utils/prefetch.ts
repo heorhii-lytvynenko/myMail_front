@@ -12,12 +12,12 @@ type TotalCount<T extends GetTotalCount> = T extends undefined
   : number
 
 interface Options<
-  TData extends PaginatedResponse<any> = PaginatedResponse<any>,
-  TSchema extends ZodObject<any> = ZodObject<any>,
+  TData extends PaginatedResponse<unknown> = PaginatedResponse<unknown>,
+  TSchema extends ZodObject = ZodObject,
   TGetTotalCount extends GetTotalCount = undefined
 > {
   schema: TSchema
-  searchParams: Record<string, any>
+  searchParams: Record<string, unknown>
   getList: (context: {
     filters: z.infer<TSchema>
   }) => Promise<FetchResponse<TData>>
@@ -27,8 +27,8 @@ interface Options<
 }
 
 export const prefetchInfiniteList = async <
-  TData extends PaginatedResponse<any> = PaginatedResponse<any>,
-  TSchema extends ZodObject<any> = ZodObject<any>,
+  TData extends PaginatedResponse<unknown> = PaginatedResponse<unknown>,
+  TSchema extends ZodObject = ZodObject,
   TGetTotalCount extends GetTotalCount = undefined
 >({
   schema,

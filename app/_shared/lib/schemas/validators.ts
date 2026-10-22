@@ -8,7 +8,6 @@ export const validators = {
   password: () => {
     return z
       .string()
-      .trim()
       .min(1, 'validation.passwordRequired')
       .min(8, 'validation.passwordMinLength')
       .regex(/[a-z]/, 'validation.passwordLowercaseRequired')

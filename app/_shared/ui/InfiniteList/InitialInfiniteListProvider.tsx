@@ -5,15 +5,15 @@ import { createContext, useContext } from 'react'
 import type { PaginatedResponse } from '@shared/types'
 
 type ContextType<
-  TData extends PaginatedResponse<any> = PaginatedResponse<any>
+  TData extends PaginatedResponse<unknown> = PaginatedResponse<unknown>
 > = InfiniteData<TData, number> | undefined
 
-const Context = createContext<ContextType<any>>(undefined)
+const Context = createContext<ContextType>(undefined)
 
 export const useInitialInfiniteList = <
-  TData extends PaginatedResponse<any> = PaginatedResponse<any>
+  TData extends PaginatedResponse<unknown> = PaginatedResponse<unknown>
 >() => {
-  const initialData = useContext<ContextType<TData>>(Context)
+  const initialData = useContext(Context)
 
   if (!initialData) {
     throw new Error(
@@ -21,16 +21,16 @@ export const useInitialInfiniteList = <
     )
   }
 
-  return initialData
+  return initialData as InfiniteData<TData, number>
 }
 
-interface Props<TData extends PaginatedResponse<any> = PaginatedResponse<any>> {
+interface Props<TData extends PaginatedResponse<unknown> = PaginatedResponse<unknown>> {
   initialData: InfiniteData<TData, number>
   children?: ReactNode
 }
 
 export const InitialInfiniteListProvider = <
-  TData extends PaginatedResponse<any> = PaginatedResponse<any>
+  TData extends PaginatedResponse<unknown> = PaginatedResponse<unknown>
 >({
   children,
   initialData
