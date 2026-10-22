@@ -139,3 +139,21 @@ it('returns an expired Google session to the localized login page', async () => 
   render(<ConnectGoogleButton locale="ua" enabled />, 'ua')
   await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith('/ua/login?reason=session-expired'))
 })
+
+it('shows a connected account without claiming unreported email or permissions', async () => {
+  fetchMock.mockResolvedValue(Response.json({ status: 'connected', email: null }))
+  render(<ConnectGoogleButton enabled />)
+  expect(await screen.findByRole('button', { name: 'Disconnect Gmail' })).toBeEnabled()
+  expect(screen.getByText('Email address unavailable')).toBeVisible()
+  expect(screen.queryByText('Read-only Gmail access')).toBeNull()
+  expect(screen.queryByRole('button', { name: 'Connect Google' })).toBeNull()
+})
+
+it('explains a pending backend disconnection without exposing provider details', async () => {
+  fetchMock.mockResolvedValueOnce(Response.json({ status: 'disconnected' }))
+  fetchMock.mockResolvedValueOnce(Response.json({ code: 'DISCONNECT_PENDING' }, { status: 409 }))
+  render(<ConnectGoogleButton enabled />)
+  await userEvent.setup().click(await screen.findByRole('button', { name: 'Connect Google' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Gmail disconnection is still being completed.')
+  expect(screen.getByRole('button', { name: 'Connect Google' })).toBeEnabled()
+})

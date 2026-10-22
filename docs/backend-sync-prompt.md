@@ -31,7 +31,7 @@
 	{"accessToken":"<application JWT>","tokenType":"Bearer","expiresIn":3600}
 	```
 
-	`expiresIn` above is illustrative; return the actual remaining lifetime from Auth0, never a hardcoded duration. JWT `exp` must also be accurate. Next.js accepts current responses without `expiresIn` when the JWT has a valid future `exp`.
+	`expiresIn` above is illustrative; return the actual remaining lifetime from Auth0, never a hardcoded duration. JWT `exp` must also be accurate. Next.js accepts omitted or null `expiresIn`, as declared by the current OpenAPI, when the JWT has a valid future `exp`.
 
 	Retain `POST /api/authentication/signIn` with the same credential body. Return 201 with the same token fields plus the existing `idpId`. The frontend removes confirmation before sending the body. Require at least eight password characters and the actual configured Auth0 password policy. Never trim or normalize passwords. Trim email whitespace, document the email casing/uniqueness policy, and apply it consistently.
 
@@ -152,7 +152,7 @@
 
 	Refresh expired Google access tokens server-side when possible. Persist reconnect_required when Google refresh fails with revoked/invalid credentials or required permission is lost. Distinguish this from an expired myMail application session: the former is a connection status, the latter is HTTP 401. Provider outages must not be misclassified as revocation.
 
-	For `reconnect_required`, `scopes` may be empty if permission was lost, or contain only the read-only Gmail scope as last known permission. A `connected` result must contain exactly the required read-only scope. Do not report a connection as healthy merely because a credential row exists.
+	For `reconnect_required`, `scopes` may be empty if permission was lost, or contain only the read-only Gmail scope as last known permission. The current OpenAPI makes `email` optional/nullable and `scopes` optional. The frontend accepts these shapes and normalizes disconnected null scopes to omitted scopes; it only displays a permission badge when the scope is explicitly reported. The backend must still verify the required read-only grant before reporting a connection as healthy. Do not report a connection as healthy merely because a credential row exists.
 
 	```http
 	DELETE /integrations/google

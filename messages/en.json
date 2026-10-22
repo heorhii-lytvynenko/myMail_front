@@ -51,7 +51,11 @@
 		"cancelled": "Google connection was cancelled. Your existing connection was not changed.",
 		"callbackFailed": "Google connection could not be completed. Please try connecting again.",
 		"connectionError": "We could not check your Gmail connection. Please try again.",
-		"disconnectedNotice": "Gmail has been disconnected."
+		"disconnectedNotice": "Gmail has been disconnected.",
+		"invalidDetails": "Check your account details and try again.",
+		"googleRequestRejected": "Google could not complete this request. Please try again.",
+		"googleConflict": "The Google connection could not be updated. Please try again.",
+		"googleDisconnectPending": "Gmail disconnection is still being completed. Please wait and try again."
 	},
 	"dashboard": {
 		"dashboard": "Dashboard",
@@ -77,6 +81,7 @@
 		"reconnect": "Needs attention",
 		"checking": "Checking connection",
 		"unavailable": "Unavailable",
-		"connectionError": "Could not check"
+		"connectionError": "Could not check",
+		"emailUnavailable": "Email address unavailable"
 	}
 }

@@ -51,7 +51,11 @@
 		"cancelled": "Anulowano łączenie Google. Istniejące połączenie nie zostało zmienione.",
 		"callbackFailed": "Nie udało się połączyć Google. Spróbuj ponownie.",
 		"connectionError": "Nie udało się sprawdzić połączenia z Gmailem. Spróbuj ponownie.",
-		"disconnectedNotice": "Gmail został odłączony."
+		"disconnectedNotice": "Gmail został odłączony.",
+		"invalidDetails": "Sprawdź dane konta i spróbuj ponownie.",
+		"googleRequestRejected": "Google nie mógł wykonać tej operacji. Spróbuj ponownie.",
+		"googleConflict": "Nie udało się zaktualizować połączenia z Google. Spróbuj ponownie.",
+		"googleDisconnectPending": "Odłączanie Gmaila jeszcze trwa. Poczekaj i spróbuj ponownie."
 	},
 	"dashboard": {
 		"dashboard": "Pulpit",
@@ -77,6 +81,7 @@
 		"reconnect": "Wymaga uwagi",
 		"checking": "Sprawdzanie połączenia",
 		"unavailable": "Niedostępne",
-		"connectionError": "Nie udało się sprawdzić"
+		"connectionError": "Nie udało się sprawdzić",
+		"emailUnavailable": "Adres e-mail jest niedostępny"
 	}
 }

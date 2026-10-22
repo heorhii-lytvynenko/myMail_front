@@ -12,7 +12,7 @@ import { Spinner } from '@shared/ui/Spinner'
 import { errorCopy } from '../../auth/errors'
 import { authPath } from '../../auth/navigation'
 import { okSchema, requestJson, RequestError } from '../../auth/request'
-import { googleStatusSchema, type GoogleStatus } from '../contracts'
+import { GMAIL_SCOPE, googleStatusSchema, type GoogleStatus } from '../contracts'
 
 const noticeClassName = 'mb-6 rounded-lg bg-blue-50 px-4 py-3 text-sm leading-7 text-blue-800'
 
@@ -113,10 +113,10 @@ export function ConnectGoogleButton({ locale, enabled, result }: { locale?: AppL
       </div> : status ? <>
         <div className="flex items-center gap-3.5 rounded-xl border border-slate-200 bg-slate-50 p-4.5">
           <IconBox name="google" className="size-11 rounded-full border border-slate-100 bg-white" slotProps={{ icon: { className: 'size-6', 'aria-hidden': true } }} />
-          <div className="min-w-0"><p className="mb-1 text-xs text-slate-500">{dashboard('googleAccount')}</p><strong className="text-sm leading-6 font-semibold wrap-anywhere">{status.email}</strong></div>
+          <div className="min-w-0"><p className="mb-1 text-xs text-slate-500">{dashboard('googleAccount')}</p><strong className="text-sm leading-6 font-semibold wrap-anywhere">{status.email ?? dashboard('emailUnavailable')}</strong></div>
         </div>
         <p className="mt-5 mb-3.5 text-sm leading-7 text-slate-600">{status.status === 'connected' ? t('connected') : t('reconnectRequired')}</p>
-        {status.status === 'connected' ? <span className="inline-flex rounded-md bg-emerald-50 px-2.5 py-2 text-xs font-medium text-emerald-700">{dashboard('readOnly')}</span> : <p className="my-5 text-sm leading-7 text-slate-500">{t('consent')}</p>}
+        {status.status === 'connected' ? status.scopes?.includes(GMAIL_SCOPE) && <span className="inline-flex rounded-md bg-emerald-50 px-2.5 py-2 text-xs font-medium text-emerald-700">{dashboard('readOnly')}</span> : <p className="my-5 text-sm leading-7 text-slate-500">{t('consent')}</p>}
         <div className="mt-6 flex flex-wrap gap-3">
           {status.status === 'reconnect_required' && <Button onClick={connect} disabled={!!pending} loading={pending === 'connect'}>{pending === 'connect' ? t('connecting') : t('reconnect')}</Button>}
           <Button variant="secondary" onClick={disconnect} disabled={!!pending} loading={pending === 'disconnect'}>{pending === 'disconnect' ? t('disconnecting') : t('disconnect')}</Button>
