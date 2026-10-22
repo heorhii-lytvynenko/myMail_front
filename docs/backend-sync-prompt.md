@@ -5,6 +5,7 @@
 	## Frontend behavior already implemented
 
 	- Browser credentials go only to same-origin Next.js API routes. Next.js calls the backend over HTTPS.
+	- The authenticated `/account` dashboard displays the application account and Google connection controls. It derives Google connection state from the backend status endpoint, including disconnected, connected, and reconnect-required states.
 	- The application access token lives in a host-only, Secure-in-production, HttpOnly, SameSite=Lax cookie named `mymail_session`.
 	- Cookie Max-Age is the minimum of token `exp`, optional `expiresIn`, and eight hours. JWT payload decoding in Next.js is a lifetime hint only; the backend remains responsible for all token verification.
 	- Missing/expired sessions require reauthentication. The frontend intentionally does not implement refresh against a guessed endpoint.
@@ -37,6 +38,8 @@
 	Retain `GET /api/users/me`, authenticated with the application Bearer token. Return exactly the supported user fields, including nonempty string `idpId` and valid string `email`. Verify issuer, signature, audience, expiration, and revocation/session state as appropriate. Return 401 for missing/invalid/expired sessions, 403 for an authenticated user denied access. Do not return successful placeholder users.
 
 	Errors: 400 validation/registration rejection, 401 invalid credentials, 409 duplicate account, 429 throttled with a valid `Retry-After`, 5xx upstream/service failure. Use safe stable error codes and no raw Auth0 bodies. Add rate limits for login/registration/Google initiation where absent. Return `Cache-Control: no-store` on sensitive responses.
+
+	Classify Auth0 application/client/connection configuration failures before the generic signup-400 mapping, and return 502 `IDENTITY_PROVIDER_FAILURE` for those failures. An Auth0 signup HTTP 400 alone does not establish that the password is invalid. Keep `REGISTRATION_REJECTED` generic for input/policy rejections. Add safe structured diagnostics for rejected Auth0 operations: operation name, upstream HTTP status, an allowlisted provider error code (otherwise `UNKNOWN`), and a server-generated correlation ID. Never log raw provider bodies/descriptions or submitted credentials. Verify `AUTH0_CONNECTION` names the intended database connection, that it is enabled for the application identified by `AUTH0_CLIENT_ID`, and that self-service signup is allowed. Test configuration failures separately from password-policy rejections.
 
 	## 2. Add application logout/invalidation
 

@@ -1,11 +1,11 @@
 import { defineRouting } from 'next-intl/routing'
+import { locales, defaultLocale, type AppLocale } from './locales'
 
-export const locales = ['en', 'uk', 'pl'] as const
-export const defaultLocale: LocaleType = 'en'
+export { locales, defaultLocale }
 export const routing = defineRouting({
   locales,
   defaultLocale,
   localePrefix: 'as-needed'
 })
 
-export type LocaleType = (typeof locales)[number]
+export type LocaleType = AppLocale

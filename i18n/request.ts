@@ -1,4 +1,5 @@
 import { getRequestConfig } from 'next-intl/server'
+import { headers } from 'next/headers'
 import type { AbstractIntlMessages } from 'use-intl/core'
 import { defaultLocale, isLocale, type AppLocale } from './locales'
 
@@ -13,7 +14,7 @@ const dictionaries: Record<AppLocale, () => Promise<MessagesModule>> = {
 }
 
 export default getRequestConfig(async ({ locale, requestLocale }) => {
-  const requestedLocale = locale ?? (await requestLocale)
+  const requestedLocale = locale ?? (await requestLocale) ?? (await headers()).get('x-mymail-locale')
   const resolvedLocale =
     requestedLocale && isLocale(requestedLocale) ? requestedLocale : defaultLocale
 
