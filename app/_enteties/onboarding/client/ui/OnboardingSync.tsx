@@ -12,7 +12,7 @@ export const OnboardingSync = () => {
     if (!hasAccount) {
       setOnboardingState(null)
     }
-  }, [hasAccount])
+  }, [hasAccount, setOnboardingState])
 
   return null
 }

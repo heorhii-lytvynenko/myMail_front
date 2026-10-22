@@ -14,8 +14,8 @@ export const ServerFetchBoundary = async <T,>({
     const response = await fetcher()
 
     return render(response)
-  } catch (error: any) {
-    if (error.status === 404) {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
       notFound()
     }
 

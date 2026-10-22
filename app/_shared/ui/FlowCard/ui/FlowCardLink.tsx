@@ -7,7 +7,7 @@ export interface FlowCardLinkProps extends ButtonProps {
   href: string
 }
 
-export const _FlowCardLink = ({
+const FlowCardLink = ({
   className,
   href,
   ...rest
@@ -29,3 +29,5 @@ export const _FlowCardLink = ({
     />
   )
 }
+
+export { FlowCardLink as _FlowCardLink }

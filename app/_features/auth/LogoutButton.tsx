@@ -1,19 +1,31 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-export function LogoutButton() {
+import { useRef, useState } from 'react'
+import type { AppLocale } from 'i18n/locales'
+import { authCopy } from './copy'
+import { authPath } from './navigation'
+import { okSchema, requestJson } from './request'
+
+export function LogoutButton({ locale }: { locale?: AppLocale }) {
   const router = useRouter()
+  const copy = authCopy(locale)
+  const submitting = useRef(false)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState('')
   async function logout() {
+    if (submitting.current) return
+    submitting.current = true
     setPending(true)
     setError('')
     try {
-      const response = await fetch('/api/auth/logout', { method: 'POST' })
-      if (!response.ok) throw new Error('Could not log out. Please try again.')
-      router.replace('/login')
+      await requestJson('/api/auth/logout', { method: 'POST' }, okSchema)
+      router.replace(authPath('login', locale))
       router.refresh()
-    } catch { setError('Could not log out. Please try again.'); setPending(false) }
+    } catch {
+      setError(copy.unavailable)
+      submitting.current = false
+      setPending(false)
+    }
   }
-  return <><button className="primary-button" disabled={pending} onClick={logout}>{pending ? 'Logging out…' : 'Log out'}</button>{error && <p role="alert">{error}</p>}</>
+  return <><button type="button" className="primary-button" disabled={pending} onClick={logout}>{pending ? copy.loggingOut : copy.logout}</button>{error && <p role="alert">{error}</p>}</>
 }

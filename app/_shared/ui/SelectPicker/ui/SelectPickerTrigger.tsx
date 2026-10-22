@@ -11,10 +11,10 @@ import type {
   SelectVariantType
 } from '../types'
 
-type Props = FieldProps & {
-  value: SelectOptionType | SelectOptionType[] | null
+type Props<TValue extends SelectOptionType> = FieldProps & {
+  value: TValue | TValue[] | null
   isOpen: boolean
-  getOptionLabel: (option: any) => ReactNode
+  getOptionLabel: (option: TValue) => ReactNode
   variant: SelectVariantType
   size: SelectSizeType
   placeholder?: string
@@ -22,7 +22,7 @@ type Props = FieldProps & {
   triggerButtonProps?: ResponsivePopoverTriggerProps
 }
 
-export const SelectPickerTrigger = ({
+export const SelectPickerTrigger = <TValue extends SelectOptionType,>({
   value,
   placeholder = 'Select',
   isOpen,
@@ -41,7 +41,7 @@ export const SelectPickerTrigger = ({
   translateError,
   size,
   required
-}: Props) => {
+}: Props<TValue>) => {
   const t = useTranslations()
   const { iconRight: iconRightProps, root, ...restSlotProps } = slotProps ?? {}
   const { className: rootClassName, ...restRootProps } = root ?? {}

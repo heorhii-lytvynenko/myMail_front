@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import type { ZodObject } from 'zod'
 import type { z } from 'zod'
 
-interface Options<T extends ZodObject<any>> extends Omit<
+interface Options<T extends ZodObject> extends Omit<
   UseFormProps<z.infer<T>>,
   'resolver'
 > {
@@ -13,7 +13,7 @@ interface Options<T extends ZodObject<any>> extends Omit<
   onError?: (error: unknown) => void
 }
 
-export const useZodForm = <T extends ZodObject<any>>(
+export const useZodForm = <T extends ZodObject>(
   schema: T,
   options: Options<T>
 ) => {
@@ -25,7 +25,7 @@ export const useZodForm = <T extends ZodObject<any>>(
   >({
     resolver: zodResolver(schema) as unknown as Resolver<
       z.infer<typeof schema>,
-      any,
+      unknown,
       z.infer<typeof schema>
     >,
     ...restOptions

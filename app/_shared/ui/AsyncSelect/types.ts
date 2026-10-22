@@ -24,7 +24,7 @@ export interface AsyncSelectProps<
         TData,
         Error,
         InfiniteData<TData>,
-        string[],
+        [...TKey, string],
         number
       >
     >,

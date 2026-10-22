@@ -42,7 +42,7 @@ export const FlowCard = ({ className, slotProps, ...rest }: FlowCardProps) => {
   )
 }
 
-FlowCard.Content = ({ className, ...rest }: ComponentProps<'div'>) => {
+const FlowCardContent = ({ className, ...rest }: ComponentProps<'div'>) => {
   return (
     <div
       className={cn(
@@ -63,7 +63,7 @@ interface FlowCardIconProps extends IconProps {
   }
 }
 
-FlowCard.Icon = ({ slotProps, ...rest }: FlowCardIconProps) => {
+const FlowCardIcon = ({ slotProps, ...rest }: FlowCardIconProps) => {
   const { root } = slotProps ?? {}
   const { className, ...restRoot } = root ?? {}
 
@@ -83,11 +83,11 @@ FlowCard.Icon = ({ slotProps, ...rest }: FlowCardIconProps) => {
   )
 }
 
-FlowCard.Header = ({ className, ...rest }: ComponentProps<'div'>) => {
+const FlowCardHeader = ({ className, ...rest }: ComponentProps<'div'>) => {
   return <div className={cn('flex flex-col gap-3', className)} {...rest} />
 }
 
-FlowCard.Title = ({ className, ...rest }: ComponentProps<'h1'>) => {
+const FlowCardTitle = ({ className, ...rest }: ComponentProps<'h1'>) => {
   return (
     <h1
       className={cn(
@@ -102,7 +102,7 @@ FlowCard.Title = ({ className, ...rest }: ComponentProps<'h1'>) => {
   )
 }
 
-FlowCard.Text = ({ className, ...rest }: ComponentProps<'p'>) => {
+const FlowCardText = ({ className, ...rest }: ComponentProps<'p'>) => {
   return <p className={cn('text-center text-slate-500', className)} {...rest} />
 }
 
@@ -110,3 +110,9 @@ FlowCard.Link = _FlowCardLink
 FlowCard.Back = _FlowCardBack
 
 FlowCard.Image = _FlowCardImage
+
+FlowCard.Content = FlowCardContent
+FlowCard.Icon = FlowCardIcon
+FlowCard.Header = FlowCardHeader
+FlowCard.Title = FlowCardTitle
+FlowCard.Text = FlowCardText

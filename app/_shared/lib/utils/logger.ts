@@ -1,14 +1,13 @@
-/* eslint-disable no-console */
 import { IS_DEV } from '../const'
 
-const defaultLogger = <T = any>(message: T, ...optionalParams: any[]): void => {
+const defaultLogger = <T = unknown>(message: T, ...optionalParams: unknown[]): void => {
   if (!IS_DEV) return
 
   console.log(`[LOG ${new Date().toISOString()}]`, message, ...optionalParams)
 }
 
 export const logger = Object.assign(defaultLogger, {
-  info<T = any>(message: T, ...optionalParams: any[]) {
+  info<T = unknown>(message: T, ...optionalParams: unknown[]) {
     if (!IS_DEV) return
 
     console.info(
@@ -18,7 +17,7 @@ export const logger = Object.assign(defaultLogger, {
     )
   },
 
-  warn<T = any>(message: T, ...optionalParams: any[]) {
+  warn<T = unknown>(message: T, ...optionalParams: unknown[]) {
     if (!IS_DEV) return
 
     console.warn(
@@ -28,7 +27,7 @@ export const logger = Object.assign(defaultLogger, {
     )
   },
 
-  error<T = any>(message: T, ...optionalParams: any[]) {
+  error<T = unknown>(message: T, ...optionalParams: unknown[]) {
     if (!IS_DEV) return
 
     console.error(

@@ -243,3 +243,10 @@ a {
 .auth-error { color: #b91c1c; margin: 0; }
 .auth-link { color: var(--accent-strong); font-weight: 650; }
 .primary-button:disabled { opacity: .65; cursor: wait; }
+.secondary-button { border: 1px solid var(--panel-border); border-radius: 8px; background: white; color: var(--foreground); cursor: pointer; padding: 12px 16px; font-weight: 650; }
+.secondary-button:disabled { opacity: .65; cursor: wait; }
+.primary-button:focus-visible, .secondary-button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.field input[aria-invalid='true'] { border-color: #b91c1c; }
+.field-hint { font-size: .85rem; }
+.google-panel { border-top: 1px solid var(--panel-border); padding-top: 20px; }
+.connection-email { margin: 0; overflow-wrap: anywhere; }

@@ -55,14 +55,7 @@ export const QueryEnum = <T extends readonly (string | number)[]>(
   values: T,
   defaultValue?: T[number]
 ) => {
-  return z
-    .string()
-    .transform((v) => v.trim())
-    .transform((v) =>
-      values.map(String).includes(v) ? (v as T[number]) : undefined
-    )
-    .default(defaultValue as any)
-    .nullish()
+  return z.string().trim().transform(value => values.find(option => String(option) === value) ?? defaultValue).nullish()
 }
 
 export const QueryEnumArray = <T extends readonly (string | number)[]>(

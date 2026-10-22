@@ -1,5 +1,6 @@
 'use client'
 import { cn, defaultGetOptionLabel, isSameOption } from '@shared/lib/utils'
+import { getSelectNextValue } from '@shared/lib/utils/getSelectNextValue'
 import { type FieldProps } from '../Field'
 import type { InfiniteScrollProps } from '../InfinityScroll'
 import type { NoDataProps } from '../NoData'
@@ -141,56 +142,19 @@ export const SelectPicker = <
           translateOptionLabel={translateOptionLabel}
           getOptionLabel={getOptionLabel}
           onOptionClick={(option: TValue) => {
-            if (multiple) {
-              setValue?.((prev) => {
-                let val = prev ? (Array.isArray(prev) ? prev : [prev]) : []
-                const fixedVal = fixedValue
-                  ? Array.isArray(fixedValue)
-                    ? fixedValue
-                    : [fixedValue]
-                  : []
-
-                return val.find((v) => isSameOption(v, option))
-                  ? val.filter((v) => {
-                      const isFixed = fixedVal.some((f) => f.id === v.id)
-
-                      if (isFixed) {
-                        return true
-                      }
-
-                      return !isSameOption(v, option)
-                    })
-                  : ([...val, option] as any)
-              })
-            } else {
-              setValue?.((prev) => {
-                let val = prev as TValue | null
-                const nextValue = isSameOption(val, option)
-                  ? null
-                  : (option as any)
-
-                if (fixedValue && !nextValue) {
-                  setIsOpen(false)
-                  onSearch?.('')
-
-                  return val
-                }
-
-                handleApply(nextValue)
-
-                return nextValue
-              })
-            }
+            const nextValue = getSelectNextValue<TValue, TMultiple>({ option, multiple, prev: value, fixedValue })
+            setValue(nextValue)
+            if (!multiple) handleApply(nextValue)
 
             onOptionClick?.(option)
           }}
           getIsActive={(option: TValue) => {
             if (multiple) {
-              let val = value ? (Array.isArray(value) ? value : [value]) : []
+              const val = value ? (Array.isArray(value) ? value : [value]) : []
 
               return !!val.find((v) => isSameOption(v, option))
             } else {
-              let val = value as TValue | null
+              const val = value as TValue | null
 
               return isSameOption(val, option)
             }

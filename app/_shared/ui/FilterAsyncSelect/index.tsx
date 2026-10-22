@@ -45,14 +45,14 @@ export const FilterAsyncSelect = <
     TMultiple
   >({ name, multiple })
 
+  const ids = toNumberArray(paramValue)
+  const resolvedIds = (multiple ? ids ?? [] : ids?.[0]) as TMultiple extends true ? number[] : number
+
   return (
     <AsyncSelect
       name={name}
       value={value}
-      initialIds={{
-        value: toNumberArray(paramValue),
-        ...(initialIds as any)
-      }}
+      initialIds={ids?.length ? { ...initialIds, value: resolvedIds } : undefined}
       onChange={(value) => {
         setFilterValue(value)
         onChange?.(value)

@@ -72,18 +72,18 @@ const chipVariants = cva(
   }
 )
 
-type AdditionalChipPropsType<T extends ElementType<any>> =
+type AdditionalChipPropsType<T extends ElementType> =
   T extends keyof React.JSX.IntrinsicElements
     ? React.JSX.IntrinsicElements[T]
     : React.ComponentPropsWithoutRef<T>
 export type ChipProps = VariantProps<typeof chipVariants>
-type Props<T extends ElementType<any>> = {
+type Props<T extends ElementType> = {
   as?: T
 } & ChipProps &
   AdditionalChipPropsType<T>
 export type ChipColor = NonNullable<VariantProps<typeof chipVariants>['color']>
 
-export const Chip = <T extends ElementType<any> = 'span'>({
+export const Chip = <T extends ElementType = 'span'>({
   as,
   className,
   size,

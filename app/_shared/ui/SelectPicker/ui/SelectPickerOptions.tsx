@@ -12,20 +12,20 @@ import type { NoDataProps } from '../../NoData'
 import { NoData } from '../../NoData'
 import type { SelectOptionType } from '../types'
 
-interface Props {
+interface Props<TValue extends SelectOptionType> {
   multiple: boolean | undefined
   fitContent: boolean | undefined
-  options: readonly SelectOptionType[]
-  onOptionClick: (option: any) => void
-  getOptionLabel: (option: any) => ReactNode
-  getIsActive: (option: any) => boolean
+  options: readonly TValue[]
+  onOptionClick: (option: TValue) => void
+  getOptionLabel: (option: TValue) => ReactNode
+  getIsActive: (option: TValue) => boolean
   optionsLoading?: boolean
   translateOptionLabel?: boolean
   infiniteScrollProps?: InfiniteScrollProps
   noDataProps?: NoDataProps
 }
 
-export const SelectPickerOptions = ({
+export const SelectPickerOptions = <TValue extends SelectOptionType,>({
   multiple,
   fitContent,
   options,
@@ -36,7 +36,10 @@ export const SelectPickerOptions = ({
   translateOptionLabel,
   infiniteScrollProps,
   noDataProps
-}: Props) => {
+}: Props<TValue>) => {
+  'use no memo'
+  // TanStack Virtual exposes mutable instance methods; keep this boundary
+  // outside compiler memoization so scrolling observes fresh measurements.
   const t = useTranslations()
   const listRef = useRef<HTMLDivElement | null>(null)
   const {

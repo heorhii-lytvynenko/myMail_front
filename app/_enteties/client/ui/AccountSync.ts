@@ -1,20 +1,10 @@
-import { useEffect } from 'react'
-import { useCookies } from '@shared/lib/hooks'
-import { ACCESS_TOKEN_NAME } from '@shared/lib/utils/token'
+import { useCallback } from 'react'
+import { useSessionExpiry } from 'app/_features/auth/useSessionExpiry'
 import { useAccountStore } from '../providers'
 
 export const AccountSync = () => {
-  const setAccount = useAccountStore((state) => state.setAccount)
-  const [{ access_token }] = useCookies([ACCESS_TOKEN_NAME])
-  const hasAccessToken = !!access_token
-
-  useEffect(() => {
-    if (!hasAccessToken) {
-      setAccount(null)
-
-      return
-    }
-  }, [hasAccessToken])
-
+  const setAccount = useAccountStore(state => state.setAccount)
+  const clear = useCallback(() => setAccount(null), [setAccount])
+  useSessionExpiry(clear)
   return null
 }

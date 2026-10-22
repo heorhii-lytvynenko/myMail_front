@@ -66,7 +66,7 @@ export const formatLanguageList = ({
   }
 }
 
-export const getNextPageParam = ({ page }: PaginatedResponse<any>) => {
+export const getNextPageParam = ({ page }: PaginatedResponse<unknown>) => {
   if (page.pageNumber + 1 < page.totalPages) {
     return page.pageNumber + 1
   }
@@ -74,7 +74,7 @@ export const getNextPageParam = ({ page }: PaginatedResponse<any>) => {
   return undefined
 }
 
-export const getPreviousPageParam = ({ page }: PaginatedResponse<any>) => {
+export const getPreviousPageParam = ({ page }: PaginatedResponse<unknown>) => {
   if (page.pageNumber >= 1) {
     return page.pageNumber - 1
   }
@@ -127,8 +127,8 @@ export const isSameOption = (
   return String(o1.id) === String(o2.id)
 }
 
-export const notFoundOn404 = (error: any): never => {
-  if (error?.status === 404) {
+export const notFoundOn404 = (error: unknown): never => {
+  if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
     notFound()
   }
 
@@ -140,14 +140,14 @@ export const isActiveOption = ({
   fixedValue,
   option
 }: {
-  value: SelectValueType<SelectOptionType, any>
-  fixedValue: SelectValueType<SelectOptionType, any> | undefined
+  value: SelectValueType<SelectOptionType, boolean>
+  fixedValue: SelectValueType<SelectOptionType, boolean> | undefined
   option: SelectOptionType
 }) => {
-  const current = (isType.array(value) ? value : [value]).filter((v) => !!v)
+  const current = (Array.isArray(value) ? value : [value]).filter((v) => !!v)
 
   if (!current.length && fixedValue) {
-    const fixed = (isType.array(fixedValue) ? fixedValue : [fixedValue]).filter(
+    const fixed = (Array.isArray(fixedValue) ? fixedValue : [fixedValue]).filter(
       (v) => !!v
     )
 

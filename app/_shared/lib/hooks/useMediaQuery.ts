@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { BreakpointType } from '../const'
 import { BREAKPOINT_KYES, BREAKPOINTS } from '../const'
 
@@ -47,25 +47,7 @@ export const useMediaMatch = <T>(
 ): T | undefined => {
   const state = useMediaQuery()
 
-  const breakpointsKey = BREAKPOINT_KYES.filter((key) => key in breakpoints)
-    .map((key) => `${key}:${String(breakpoints[key as BreakpointType])}`)
-    .join('|')
-
-  const match = useMemo(() => {
-    const sorted = BREAKPOINT_KYES.filter((key) => key in breakpoints).sort(
-      (a, b) =>
-        BREAKPOINTS[b as BreakpointType] - BREAKPOINTS[a as BreakpointType]
-    )
-
-    const matched = sorted.find(
-      (key) =>
-        state[
-          `is${key.charAt(0).toUpperCase() + key.slice(1)}` as keyof MediaQueryState
-        ]
-    )
-
-    return matched ? breakpoints[matched as BreakpointType] : undefined
-  }, [state, breakpointsKey])
-
-  return match
+  const sorted = BREAKPOINT_KYES.filter(key => key in breakpoints).sort((a, b) => BREAKPOINTS[b] - BREAKPOINTS[a])
+  const matched = sorted.find(key => state[`is${key.charAt(0).toUpperCase() + key.slice(1)}` as keyof MediaQueryState])
+  return matched ? breakpoints[matched] : undefined
 }

@@ -1,115 +1,31 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { EMPTY_ARRAY } from '@shared/lib/const'
 import { useSearchParams } from '@shared/lib/hooks'
-import { equalIds, isSameOption } from '@shared/lib/utils'
+import { isSameOption } from '@shared/lib/utils'
 import type { SelectOptionType, SelectValueType } from '@shared/ui/SelectPicker'
 
-export const useFilterSelect = <
-  TValue extends SelectOptionType,
-  TMultiple extends boolean
->({
-  name,
-  multiple,
-  options
-}: {
-  name: string | undefined
-  multiple: TMultiple | undefined
-  options?: readonly TValue[]
+export const useFilterSelect = <TValue extends SelectOptionType, TMultiple extends boolean>({ name, multiple, options }: {
+  name: string | undefined; multiple: TMultiple | undefined; options?: readonly TValue[]
 }) => {
   const { getSearchParam, setSearchParam } = useSearchParams()
-
-  const getParamIds = () => {
-    if (multiple) {
-      const ids = getSearchParam<string[]>(name, { format: 'array' })
-
-      if (!ids?.length) {
-        return EMPTY_ARRAY
-      }
-
-      return Array.from(new Set(ids))
-    } else {
-      return getSearchParam(name)
-    }
+  const raw = getSearchParam(name)
+  const paramValue = useMemo(() => multiple ? raw ? [...new Set(raw.split(',').map(value => value.trim()))] : EMPTY_ARRAY : raw, [raw, multiple])
+  const selected = () => (multiple ? (paramValue as readonly string[]).flatMap(id => {
+    const match = options?.find(option => isSameOption(option, { id }))
+    return match ? [match] : []
+  }) : options?.find(option => isSameOption(option, { id: paramValue as string })) ?? null) as SelectValueType<TValue, TMultiple>
+  const [snapshot, setSnapshot] = useState(() => ({ paramValue, options, value: selected() }))
+  if (snapshot.paramValue !== paramValue || snapshot.options !== options) {
+    setSnapshot({ paramValue, options, value: options ? selected() : snapshot.value })
   }
-
-  const paramValue = useMemo(getParamIds, [getSearchParam, name, multiple])
-
-  const [value, setValue] = useState<SelectValueType<TValue, TMultiple>>(() => {
-    if (multiple) {
-      let ids = paramValue as string[]
-
-      if (!options) {
-        return [] as unknown as SelectValueType<TValue, TMultiple>
-      }
-
-      return ids
-        .map((id) => options.find((o) => isSameOption(o, { id })))
-        .filter((v) => !!v) as SelectValueType<TValue, TMultiple>
-    } else {
-      let id = paramValue as string
-
-      if (!options) {
-        return null as SelectValueType<TValue, TMultiple>
-      }
-
-      return (options.find((o) => isSameOption(o, { id })) ??
-        null) as SelectValueType<TValue, TMultiple>
-    }
-  })
-
-  useEffect(() => {
-    if (!options) {
-      return
-    }
-
-    if (multiple) {
-      const val = value ? (Array.isArray(value) ? value : [value]) : []
-      const valueIds = val.map((v) => String(v.id))
-
-      let paramIds = paramValue as string[]
-
-      if (equalIds(paramIds, valueIds)) {
-        return
-      }
-
-      setValue(
-        paramIds
-          .map((id) => options.find((o) => isSameOption(o, { id })))
-          .filter((v) => !!v) as SelectValueType<TValue, TMultiple>
-      )
-    } else {
-      let id = paramValue as string
-
-      setValue(
-        (options.find((o) => isSameOption(o, { id })) ??
-          null) as SelectValueType<TValue, TMultiple>
-      )
-    }
-  }, [paramValue, multiple, options])
-
-  const setFilterValue = (nextValue: SelectValueType<TValue, TMultiple>) => {
-    setValue(nextValue)
-
-    if (!name) {
-      return
-    }
-
-    if (multiple) {
-      const nextVal = nextValue
-        ? Array.isArray(nextValue)
-          ? nextValue
-          : [nextValue]
-        : ([] as TValue[])
-
-      const nextIds = nextVal.map((v) => String(v.id))
-
-      setTimeout(() => setSearchParam(name, nextIds), 150)
-    } else {
-      const nextVal = nextValue as TValue | null
-
-      setTimeout(() => setSearchParam(name, nextVal?.id), 150)
-    }
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  useEffect(() => () => clearTimeout(timer.current), [])
+  const setFilterValue = (value: SelectValueType<TValue, TMultiple>) => {
+    setSnapshot({ paramValue, options, value })
+    if (!name) return
+    if (timer.current) clearTimeout(timer.current)
+    const values = value ? Array.isArray(value) ? value : [value] : []
+    timer.current = setTimeout(() => setSearchParam(name, multiple ? values.map(option => String(option.id)) : values[0]?.id), 150)
   }
-
-  return { value, paramValue, setFilterValue }
+  return { value: snapshot.value, paramValue, setFilterValue }
 }

@@ -1,6 +1,6 @@
 import type { QueryFunctionContext } from '@tanstack/react-query'
 import { useQueries } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
 import { equalIds } from '@shared/lib/utils'
 import type { PaginatedResponse } from '@shared/types'
 import type { SelectOptionType, SelectValueType } from '@shared/ui/SelectPicker'
@@ -31,7 +31,7 @@ function getIds(
         ? value?.id
         : value
     )
-    .filter((v): v is string | number => !!v)
+    .filter((v): v is string | number => v !== undefined && v !== null)
 }
 
 export const useLoadInitialValue = <
@@ -48,33 +48,12 @@ export const useLoadInitialValue = <
   const { value, queryOptions: initialIdsQueryOptions } = initialIdsCongif ?? {}
   const { queryFn, getQueryKey } = initialIdsQueryOptions ?? {}
 
-  const [ids, setIds] = useState(() => getIds(value))
-  const initializedRef = useRef(false)
-  const idsRef = useRef(ids)
-  const prevIdsRef = useRef<number[]>(ids)
-
-  useEffect(() => {
-    const nextIds = getIds(value)
-
-    if (equalIds(nextIds, prevIdsRef.current)) {
-      return
-    }
-
-    prevIdsRef.current = nextIds
-
-    const realValueIds = getIds(realValue)
-
-    if (equalIds(nextIds, realValueIds)) {
-      return
-    }
-
-    setIds(nextIds)
-    idsRef.current = nextIds
-    initializedRef.current = false
-  }, [value])
+  const ids = useMemo(() => getIds(value), [value])
+  const idsKey = JSON.stringify(ids)
+  const initializedRef = useRef<string | null>(null)
 
   const { previewData, isFetching } = useQueries({
-    queries: ids.map((id) => ({
+    queries: (queryFn && getQueryKey ? ids : []).map((id) => ({
       queryKey: getQueryKey!(id),
       queryFn: async (context: QueryFunctionContext<string[]>) => {
         if (!queryFn) {
@@ -97,25 +76,12 @@ export const useLoadInitialValue = <
   })
 
   useEffect(() => {
-    if (isFetching || initializedRef.current || !onChange) {
-      return
-    }
-
-    const previewIds = getIds(previewData)
-
-    if (!equalIds(previewIds, idsRef.current)) {
-      return
-    }
-
-    initializedRef.current = true
-
-    onChange(
-      (multiple ? previewData : previewData[0]) as SelectValueType<
-        TValue,
-        TMultiple
-      >
-    )
-  }, [previewData, multiple, isFetching, onChange])
+    if (isFetching || !ids.length || initializedRef.current === idsKey || !onChange) return
+    if (!equalIds(getIds(previewData), ids)) return
+    initializedRef.current = idsKey
+    if (equalIds(getIds(realValue), ids)) return
+    onChange((multiple ? previewData : previewData[0]) as SelectValueType<TValue, TMultiple>)
+  }, [previewData, multiple, isFetching, onChange, ids, idsKey, realValue])
 
   return {
     isLoading: isFetching

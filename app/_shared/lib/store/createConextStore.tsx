@@ -10,7 +10,7 @@ type Initilizer<T, F> = (
 	api: StoreApi<T>
 ) => T
 
-export const createConextStore = <T, F = Record<string, any>>(
+export const createConextStore = <T, F = Record<string, unknown>>(
 	initializer: Initilizer<T, F>
 ) => {
 	const Context = createContext<StoreApi<T> | undefined>(undefined)

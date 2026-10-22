@@ -16,7 +16,7 @@ interface Props extends Partial<ImageProps> {
   }
 }
 
-export const _FlowCardImage = ({
+const FlowCardImage = ({
   src,
   className,
   slotProps,
@@ -125,3 +125,5 @@ export const _FlowCardImage = ({
     </Visible>
   )
 }
+
+export { FlowCardImage as _FlowCardImage }
