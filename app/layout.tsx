@@ -10,5 +10,9 @@ export default async function Layout({ children }: { children: ReactNode }) {
   const requested = (await headers()).get('x-mymail-locale') ?? 'en'
   const locale = isLocale(requested) ? requested : 'en'
   const messages = await getMessages({ locale })
-  return <html lang={locale === 'ua' ? 'uk' : locale}><body><NextIntlClientProvider locale={locale} messages={messages}>{children}</NextIntlClientProvider></body></html>
+  return <html lang={locale === 'ua' ? 'uk' : locale} className='min-h-full'>
+    <body className='m-0 min-h-dvh bg-background bg-[linear-gradient(180deg,rgba(219,234,254,0.58),transparent_38%)] font-sans text-foreground'>
+      <NextIntlClientProvider locale={locale} messages={messages}>{children}</NextIntlClientProvider>
+    </body>
+  </html>
 }

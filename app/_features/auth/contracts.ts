@@ -21,7 +21,11 @@ export const tokenResponseSchema = z.object({
   accessToken: z.string().min(1).regex(/^[A-Za-z0-9._~+/-]+=*$/)
     .refine(token => encodeURIComponent(token).length <= 3800),
   tokenType: z.literal('Bearer'),
-  expiresIn: z.number().int().positive().optional(),
+  expiresIn: z.number().int().positive().nullable().transform(value => value ?? undefined).optional(),
+})
+
+export const registrationResponseSchema = tokenResponseSchema.extend({
+  idpId: z.string().min(1),
 })
 
 export type CurrentUser = z.infer<typeof currentUserSchema>

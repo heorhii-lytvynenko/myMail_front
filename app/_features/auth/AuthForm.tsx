@@ -1,95 +1,88 @@
 'use client'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, type FormEvent } from 'react'
 import { useTranslations } from 'next-intl'
 import type { AppLocale } from 'i18n/locales'
-import { credentialSchema, registrationSchema } from './contracts'
-import { errorCopy } from './errors'
+import { Button } from '@shared/ui/Button'
+import { ErrorMessage } from '@shared/ui/ErrorMessage'
+import { HelperText } from '@shared/ui/HelperText'
+import { Section } from '@shared/ui/Section'
+import { useAuthForm, type AuthMode } from './lib/useAuthForm'
 import { authPath } from './navigation'
-import { okSchema, requestJson, RequestError } from './request'
 import { SessionMonitor } from './SessionMonitor'
+import { AuthFields } from './ui/AuthFields'
+import { AuthLayout } from './ui/AuthLayout'
 
-type FieldErrors = Partial<Record<'email' | 'password' | 'confirmPassword', string>>
-export function AuthForm({ mode, locale, expired = false }: { mode: 'login' | 'register'; locale?: AppLocale; expired?: boolean }) {
+export function AuthForm({ mode, locale, expired = false }: {
+  mode: AuthMode
+  locale?: AppLocale
+  expired?: boolean
+}) {
   const signingUp = mode === 'register'
   const t = useTranslations('auth')
-  const router = useRouter()
-  const submitting = useRef(false)
   const formRef = useRef<HTMLFormElement>(null)
   const alertRef = useRef<HTMLParagraphElement>(null)
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState('')
-  const [fields, setFields] = useState<FieldErrors>({})
+  const { pending, error, fields, submit } = useAuthForm({ mode, locale })
+
   useEffect(() => {
     if (pending) return
-    if (Object.keys(fields).length) formRef.current?.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus()
-    else if (error) alertRef.current?.focus()
+    if (Object.keys(fields).length) {
+      formRef.current?.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus()
+    } else if (error) {
+      alertRef.current?.focus()
+    }
   }, [fields, error, pending])
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (submitting.current) return
-    submitting.current = true
-    const form = new FormData(event.currentTarget)
-    const values = { email: form.get('email'), password: form.get('password'), ...(signingUp ? { confirmPassword: form.get('confirmPassword') } : {}) }
-    const parsed = (signingUp ? registrationSchema : credentialSchema).safeParse(values)
-    setError('')
-    setFields({})
-    if (!parsed.success) {
-      const errors: FieldErrors = {}
-      for (const issue of parsed.error.issues) {
-        const field = issue.path[0]
-        if (field === 'email') errors.email = t('invalidEmail')
-        if (field === 'password') errors.password = signingUp ? t('shortPassword') : t('invalidPassword')
-        if (field === 'confirmPassword') errors.confirmPassword = t('mismatch')
-      }
-      setFields(errors)
-      submitting.current = false
-      return
-    }
-    setPending(true)
-    let navigating = false
-    try {
-      await requestJson(`/api/auth/${mode}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(parsed.data) }, okSchema)
-      navigating = true
-      router.replace(authPath('account', locale))
-      router.refresh()
-    } catch (failure) {
-      if (failure instanceof RequestError) {
-        const errors: FieldErrors = {}
-        if (failure.fields.email) errors.email = t('invalidEmail')
-        if (failure.fields.password) errors.password = signingUp ? t('shortPassword') : t('invalidPassword')
-        if (failure.fields.confirmPassword) errors.confirmPassword = t('mismatch')
-        setFields(errors)
-        if (!Object.keys(errors).length) setError(errorCopy(failure.code, t))
-      } else setError(t('unavailable'))
-    } finally {
-      if (!navigating) { submitting.current = false; setPending(false) }
-    }
+    void submit(new FormData(event.currentTarget))
   }
-  return <main className="login-page">
+
+  return <AuthLayout labelledBy='auth-title'>
     {expired && <SessionMonitor locale={locale} recover />}
-    <section className="login-panel auth-panel" aria-labelledby="auth-title">
-      <Link href={authPath('login', locale)} className="login-kicker">myMail</Link>
-      <div className="login-heading"><h1 className="login-title" id="auth-title">{signingUp ? t('create') : t('welcome')}</h1>
-        <p className="login-copy">{signingUp ? t('registerCopy') : t('loginCopy')}</p></div>
-      {expired && <p role="status" className="login-copy">{t('expired')}</p>}
-      <form className="login-form" ref={formRef} onSubmit={submit} aria-busy={pending} noValidate>
-        <div className="field"><label htmlFor="email">{t('email')}</label>
-          <input id="email" name="email" type="email" autoComplete="email" inputMode="email" maxLength={254} placeholder="you@example.com" required disabled={pending} aria-invalid={!!fields.email} aria-describedby={fields.email ? 'email-error' : undefined} />
-          {fields.email && <p id="email-error" className="auth-error">{fields.email}</p>}</div>
-        <div className="field"><label htmlFor="password">{t('password')}</label>
-          <input id="password" name="password" type="password" autoComplete={signingUp ? 'new-password' : 'current-password'} minLength={signingUp ? 8 : 1} maxLength={1024} required disabled={pending} aria-invalid={!!fields.password} aria-describedby={[signingUp ? 'password-hint' : '', fields.password ? 'password-error' : ''].filter(Boolean).join(' ') || undefined} />
-          {signingUp && <p id="password-hint" className="login-copy field-hint">{t('passwordHint')}</p>}
-          {fields.password && <p id="password-error" className="auth-error">{fields.password}</p>}</div>
-        {signingUp && <div className="field"><label htmlFor="confirmPassword">{t('confirmation')}</label>
-          <input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" maxLength={1024} required disabled={pending} aria-invalid={!!fields.confirmPassword} aria-describedby={fields.confirmPassword ? 'confirmation-error' : undefined} />
-          {fields.confirmPassword && <p id="confirmation-error" className="auth-error">{fields.confirmPassword}</p>}</div>}
-        {error && <p className="auth-error" role="alert" ref={alertRef} tabIndex={-1}>{error}</p>}
-        <button className="primary-button" type="submit" disabled={pending}>{pending ? t('waiting') : signingUp ? t('register') : t('login')}</button>
-      </form>
-      <p className="login-copy">{signingUp ? t('existing') : t('newUser')} <Link className="auth-link" href={authPath(signingUp ? 'login' : 'register', locale)}>{signingUp ? t('login') : t('register')}</Link></p>
-    </section>
-  </main>
+    <Link
+      href={authPath('login', locale)}
+      className='w-fit text-sm font-bold text-accent-strong uppercase focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-accent'
+    >
+      myMail
+    </Link>
+    <Section.Panel.Block className='gap-2'>
+      <Section.Panel.Title
+        as='h1'
+        id='auth-title'
+        className='text-3xl leading-none font-bold text-primaryText md:text-4xl lg:text-5xl'
+      >
+        {signingUp ? t('create') : t('welcome')}
+      </Section.Panel.Title>
+      <HelperText className='max-w-prose text-base leading-relaxed font-normal text-muted'>
+        {signingUp ? t('registerCopy') : t('loginCopy')}
+      </HelperText>
+    </Section.Panel.Block>
+    {expired && <HelperText role='status' className='text-base leading-relaxed font-normal text-muted'>
+      {t('expired')}
+    </HelperText>}
+    <form ref={formRef} onSubmit={handleSubmit} aria-busy={pending} noValidate className='grid gap-4'>
+      <AuthFields mode={mode} pending={pending} errors={fields} />
+      <ErrorMessage ref={alertRef} role='alert' tabIndex={-1} className='text-base font-normal text-danger'>
+        {error}
+      </ErrorMessage>
+      <Button
+        type='submit'
+        loading={pending}
+        disabled={pending}
+        className='h-auto rounded-lg bg-accent px-4 py-3 text-base font-bold hover:bg-accent-strong before:hidden disabled:cursor-wait aria-disabled:opacity-65 data-[loading=true]:opacity-65 focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-accent'
+      >
+        {pending ? t('waiting') : signingUp ? t('register') : t('login')}
+      </Button>
+    </form>
+    <p className='max-w-prose text-base leading-relaxed text-muted'>
+      {signingUp ? t('existing') : t('newUser')}{' '}
+      <Link
+        href={authPath(signingUp ? 'login' : 'register', locale)}
+        className='font-semibold text-accent-strong focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-accent'
+      >
+        {signingUp ? t('login') : t('register')}
+      </Link>
+    </p>
+  </AuthLayout>
 }

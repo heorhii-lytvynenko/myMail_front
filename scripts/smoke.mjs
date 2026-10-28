@@ -38,8 +38,10 @@ try {
       const response = await request(path)
       assert.equal(response.status, 200)
       const html = await response.text()
-      assert.ok(html.includes(`<html lang="${language}">`))
+      assert.match(html, new RegExp(`<html\\b[^>]*\\blang="${language}"[\\s>]`))
       assert.ok(html.includes(text))
+      assert.equal([...html.matchAll(/<main\b/g)].length, 1)
+      assert.equal([...html.matchAll(/<form\b/g)].length, 1)
     })
   }
   for (const [path, target] of [['/', '/login'], ['/account', '/login'], ['/pl/account', '/pl/login']]) {

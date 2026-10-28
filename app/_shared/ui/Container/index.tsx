@@ -7,7 +7,7 @@ export const Container = ({ className, children }: ContainerProps) => {
   return (
     <div
       className={cn(
-        'mx-auto w-full max-w-[1110px] flex flex-col grow gap-4 px-4',
+        'mx-auto w-full max-w-6xl flex flex-col grow gap-4 px-4',
         className
       )}
     >

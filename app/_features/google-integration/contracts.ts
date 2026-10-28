@@ -7,15 +7,17 @@ export const googleAuthorizationSchema = z.object({
   expiresIn: z.number().int().min(1).max(600),
 })
 
-const connectedAccount = z.object({
-  email: z.email(),
-  scopes: z.array(z.string()).refine(scopes => scopes.length === 1 && scopes[0] === GMAIL_SCOPE),
+const connectionDetailsSchema = z.object({
+  email: z.email().nullish(),
+  // The backend emits null for disconnected scopes; expose that as omitted.
+  scopes: z.array(z.literal(GMAIL_SCOPE)).max(1).nullable().transform(value => value ?? undefined).optional(),
 })
 
 export const googleStatusSchema = z.discriminatedUnion('status', [
-  z.object({ status: z.literal('disconnected') }),
-  connectedAccount.extend({ status: z.literal('connected') }),
-  z.object({ status: z.literal('reconnect_required'), email: z.email(), scopes: z.array(z.literal(GMAIL_SCOPE)).max(1) }),
+  connectionDetailsSchema.extend({ status: z.literal('disconnected') }),
+  connectionDetailsSchema.extend({ status: z.literal('connected') }),
+  connectionDetailsSchema.extend({ status: z.literal('reconnect_required') }),
 ])
-export const googleCompletionSchema = connectedAccount.extend({ status: z.literal('connected') })
+export const googleCompletionSchema = connectionDetailsSchema.extend({ status: z.literal('connected') })
+
 export type GoogleStatus = z.infer<typeof googleStatusSchema>

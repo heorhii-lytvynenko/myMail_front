@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { credentialSchema, registrationSchema, tokenResponseSchema } from 'app/_features/auth/contracts'
+import { credentialSchema, registrationSchema, registrationResponseSchema, tokenResponseSchema } from 'app/_features/auth/contracts'
 import { backendFetch, privateJson, retryAfter, sameOrigin, serviceFailure } from 'app/_features/auth/http'
 import { clearSession, cookieOptions, getSessionToken, SESSION_COOKIE, sessionLifetime } from 'app/_features/auth/session'
 import { clearGoogleTransaction } from 'app/_features/google-integration/oauth'
@@ -36,11 +36,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ ac
     })
     if (!upstream.ok) {
       const code = upstream.status === 401 ? 'INVALID_CREDENTIALS' : upstream.status === 409 ? 'ACCOUNT_EXISTS' :
-        upstream.status === 429 ? 'RATE_LIMITED' : upstream.status === 400 ? 'REGISTRATION_REJECTED' :
+        upstream.status === 429 ? 'RATE_LIMITED' : upstream.status === 400 ? (action === 'register' ? 'REGISTRATION_REJECTED' : 'VALIDATION_ERROR') :
         upstream.status === 403 ? 'FORBIDDEN' : 'SERVICE_UNAVAILABLE'
-      return privateJson({ code }, upstream.status >= 400 && upstream.status < 500 ? upstream.status : 502, retryAfter(upstream))
+      return privateJson({ code }, upstream.status >= 400 && upstream.status < 500 || upstream.status === 503 ? upstream.status : 502, retryAfter(upstream))
     }
-    const token = tokenResponseSchema.parse(await upstream.json())
+    const token = (action === 'register' ? registrationResponseSchema : tokenResponseSchema).parse(await upstream.json())
     const maxAge = sessionLifetime(token.accessToken, token.expiresIn)
     const response = clearGoogleTransaction(privateJson({ ok: true }, action === 'register' ? 201 : 200))
     response.cookies.set(SESSION_COOKIE, token.accessToken, { ...cookieOptions(), maxAge })
