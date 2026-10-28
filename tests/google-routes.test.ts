@@ -104,6 +104,18 @@ describe('Google callback', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('https://backend.example/integrations/google/complete')
     expect(JSON.parse(fetchMock.mock.calls[0][1]!.body as string)).toEqual({ code: 'synthetic-code', state: oauthState, codeVerifier: transaction.verifier, redirectUri: `${origin}/api/integrations/google/callback` })
   })
+  it('accepts completion when the API omits optional account fields', async () => {
+    saveTransaction()
+    fetchMock.mockResolvedValue(Response.json({ status: 'connected', email: null }))
+    const response = await callback(callbackRequest())
+    expect(response.headers.get('location')).toBe(`${origin}/pl/account?google=connected`)
+    expect(response.cookies.get(googleCookieName())?.maxAge).toBe(0)
+  })
+  it('does not accept a disconnected completion as successful authorization', async () => {
+    saveTransaction()
+    fetchMock.mockResolvedValue(Response.json({ status: 'disconnected' }))
+    expect((await callback(callbackRequest())).headers.get('location')).toContain('google=failed')
+  })
   it.each(['missing', 'swapped', 'tampered', 'expired', 'different-session'])('rejects %s transaction before exchanging credentials', async scenario => {
     saveTransaction()
     if (scenario === 'missing') jar.delete(googleCookieName())
@@ -161,6 +173,42 @@ describe('connection management', () => {
     fetchMock.mockResolvedValue(Response.json(revoked))
     expect(await (await status()).json()).toEqual(revoked)
   })
+  it.each([
+    { status: 'connected' },
+    { status: 'connected', email: null, scopes: [] },
+    { status: 'reconnect_required', email: null },
+    { status: 'disconnected', email: null },
+  ])('accepts optional and nullable account details: %j', async body => {
+    fetchMock.mockResolvedValue(Response.json(body))
+    const response = await status()
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual(body)
+  })
+  it('normalizes the backend disconnected response with null scopes', async () => {
+    fetchMock.mockResolvedValue(Response.json({ status: 'disconnected', email: null, scopes: null }))
+    expect(await (await status()).json()).toEqual({ status: 'disconnected', email: null })
+  })
+  it.each([[400, 'GOOGLE_REQUEST_REJECTED'], [409, 'GOOGLE_CONFLICT'], [429, 'RATE_LIMITED'], [503, 'GOOGLE_UNAVAILABLE']])('preserves API error status %i without provider details', async (httpStatus, code) => {
+    fetchMock.mockResolvedValue(Response.json({ code: 'unrecognized internal code', message: 'private provider details' }, { status: httpStatus as number, headers: { 'Retry-After': '60' } }))
+    const response = await status()
+    expect(response.status).toBe(httpStatus)
+    expect(await response.json()).toEqual({ code })
+    expect(response.headers.get('Retry-After')).toBe('60')
+  })
+  it('retains the safe pending-disconnection code for the dashboard', async () => {
+    fetchMock.mockResolvedValue(Response.json({ code: 'DISCONNECT_PENDING', message: 'private provider details' }, { status: 409 }))
+    const response = await connect(post('connect'))
+    expect(response.status).toBe(409)
+    expect(await response.json()).toEqual({ code: 'DISCONNECT_PENDING' })
+    expect(response.cookies.get(googleCookieName())).toBeUndefined()
+  })
+  it('clears invalid sessions when checking connection status', async () => {
+    fetchMock.mockResolvedValue(Response.json({ code: 'UNAUTHORIZED' }, { status: 401 }))
+    const response = await status()
+    expect(response.status).toBe(401)
+    expect(response.cookies.get('mymail_session')?.maxAge).toBe(0)
+    expect(await response.json()).toEqual({ code: 'SESSION_EXPIRED' })
+  })
   it('disconnects only through the authenticated backend operation', async () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 204 }))
     expect((await disconnect(post('disconnect'))).status).toBe(200)
@@ -170,6 +218,6 @@ describe('connection management', () => {
   })
   it('does not pretend disconnection succeeded on a backend failure', async () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 503 }))
-    expect((await disconnect(post('disconnect'))).status).toBe(502)
+    expect((await disconnect(post('disconnect'))).status).toBe(503)
   })
 })

@@ -55,7 +55,7 @@ export async function getCurrentUser(token?: string) {
   }, 10000)
   if (response.status === 401) return null
   if (response.status === 403) throw new BackendError(403, 'Your account does not have permission to open this page.')
-  if (!response.ok) throw new BackendError(502)
+  if (!response.ok) throw new BackendError(response.status === 503 ? 503 : 502)
   try {
     const parsed = currentUserSchema.safeParse(await response.json())
     if (parsed.success) return parsed.data

@@ -66,7 +66,7 @@ const Panel = ({ className, ...restProps }: SectionPanelProps) => {
       className={cn(
         `
           flex-col grow flex gap-6
-          lg:max-w-[280px]
+          lg:max-w-70
           w-full shrink-0
         `,
         className
@@ -99,15 +99,16 @@ const PanelSticky = ({ className, ...restProps }: PanelStickyProps) => {
 }
 
 export interface PanelTitleProps extends ComponentProps<'h2'> {
+  as?: 'h1' | 'h2' | 'h3'
   icon?: IconType
 }
 
-const PanelTitle = ({ icon, className, ...restProps }: PanelTitleProps) => {
+const PanelTitle = ({ as: Heading = 'h2', icon, className, ...restProps }: PanelTitleProps) => {
   return (
     <div className='flex items-center gap-2'>
       <Icon name={icon} size={20} />
 
-      <h2
+      <Heading
         className={cn(
           'font-medium text-base flex items-center gap-2',
           className
