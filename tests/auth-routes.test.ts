@@ -57,7 +57,7 @@ describe('authentication boundary', () => {
     expect(fetchMock.mock.calls[0][1]).toMatchObject({ cache: 'no-store', redirect: 'error' })
   })
   it('normalizes email whitespace, preserves password spaces and strips confirmation upstream', async () => {
-    fetchMock.mockResolvedValue(Response.json({ accessToken: jwt(), tokenType: 'Bearer' }))
+    fetchMock.mockResolvedValue(Response.json({ accessToken: jwt(), tokenType: 'Bearer', idpId: 'auth0|review' }))
     const response = await submit('register', { ...credentials, email: ' Review@Example.com ', confirmPassword: credentials.password })
     expect(response.status).toBe(201)
     expect(JSON.parse(fetchMock.mock.calls[0][1]!.body as string)).toEqual({ email: 'Review@Example.com', password: credentials.password })
@@ -80,14 +80,34 @@ describe('authentication boundary', () => {
     const request = new NextRequest(`${origin}/api/auth/login`, { method: 'POST', headers: { Origin: origin }, body: '{' })
     expect((await POST(request, { params: Promise.resolve({ action: 'login' }) })).status).toBe(400)
   })
-  it.each([[401, 'INVALID_CREDENTIALS'], [409, 'ACCOUNT_EXISTS'], [429, 'RATE_LIMITED'], [400, 'REGISTRATION_REJECTED'], [403, 'FORBIDDEN'], [500, 'SERVICE_UNAVAILABLE']])('maps status %i safely', async (status, code) => {
+  it.each([[401, 'INVALID_CREDENTIALS'], [409, 'ACCOUNT_EXISTS'], [429, 'RATE_LIMITED'], [400, 'VALIDATION_ERROR'], [403, 'FORBIDDEN'], [500, 'SERVICE_UNAVAILABLE'], [502, 'SERVICE_UNAVAILABLE'], [503, 'SERVICE_UNAVAILABLE']])('maps status %i safely', async (status, code) => {
     fetchMock.mockResolvedValue(Response.json({ message: 'sensitive upstream details' }, { status: status as number, headers: { 'Retry-After': '60' } }))
     const response = await submit('login')
     expect((await response.json()).code).toBe(code)
     expect(response.status).toBe(status === 500 ? 502 : status)
     expect(response.headers.get('Retry-After')).toBe('60')
   })
-  it.each([{}, null, { accessToken: jwt(-10), tokenType: 'Bearer' }, { accessToken: 'opaque', tokenType: 'Bearer' }, { accessToken: jwt(), tokenType: 'other' }])('fails closed on invalid token responses', async body => {
+  it.each(['login', 'register'])('accepts nullable expiry for %s and derives cookie lifetime from JWT exp', async action => {
+    fetchMock.mockResolvedValue(Response.json({ accessToken: jwt(600), tokenType: 'Bearer', expiresIn: null, idpId: 'auth0|review' }))
+    const response = await submit(action, { ...credentials, confirmPassword: credentials.password })
+    expect(response.status).toBe(action === 'register' ? 201 : 200)
+    expect(response.cookies.get('mymail_session')?.maxAge).toBeGreaterThan(500)
+    expect(response.cookies.get('mymail_session')?.maxAge).toBeLessThanOrEqual(600)
+    expect(await response.json()).toEqual({ ok: true })
+  })
+  it('rejects a registration response missing its required identity', async () => {
+    fetchMock.mockResolvedValue(Response.json({ accessToken: jwt(), tokenType: 'Bearer' }))
+    const response = await submit('register', { ...credentials, confirmPassword: credentials.password })
+    expect(response.status).toBe(502)
+    expect(response.cookies.get('mymail_session')).toBeUndefined()
+  })
+  it('keeps registration rejection distinct from login validation errors', async () => {
+    fetchMock.mockResolvedValue(Response.json({ code: 'REGISTRATION_REJECTED', message: 'private provider details' }, { status: 400 }))
+    const response = await submit('register', { ...credentials, confirmPassword: credentials.password })
+    expect(response.status).toBe(400)
+    expect(await response.json()).toEqual({ code: 'REGISTRATION_REJECTED' })
+  })
+  it.each([{}, null, { accessToken: jwt(-10), tokenType: 'Bearer' }, { accessToken: 'opaque', tokenType: 'Bearer' }, { accessToken: 'opaque', tokenType: 'Bearer', expiresIn: null }, { accessToken: jwt(), tokenType: 'other' }])('fails closed on invalid token responses', async body => {
     fetchMock.mockResolvedValue(Response.json(body))
     const response = await submit('login')
     expect(response.status).toBe(502)
@@ -141,10 +161,10 @@ describe('sessions and configuration', () => {
   })
   it('preserves sessions on outages and distinguishes forbidden responses', async () => {
     state.token = jwt()
-    for (const status of [403, 500]) {
+    for (const status of [403, 500, 503]) {
       fetchMock.mockResolvedValue(new Response(null, { status }))
       const response = await session()
-      expect(response.status).toBe(status === 403 ? 403 : 502)
+      expect(response.status).toBe(status === 403 || status === 503 ? status : 502)
       expect(response.cookies.get('mymail_session')).toBeUndefined()
     }
   })

@@ -36,9 +36,6 @@
 		"loggingOut": "Вихід…",
 		"retry": "Спробувати ще раз",
 		"accountError": "Не вдалося завантажити обліковий запис. Спробуйте ще раз або вийдіть.",
-		"gmail": "Підключення Gmail",
-		"gmailUnavailable": "Підключення Gmail поки недоступне.",
-		"consent": "Підключіть Google, щоб myMail міг читати листи Gmail. Це не надає дозволу надсилати або видаляти листи. Ви можете відключити обліковий запис будь-коли.",
 		"connect": "Підключити Google",
 		"reconnect": "Підключити Google знову",
 		"disconnect": "Відключити Gmail",
@@ -51,32 +48,25 @@
 		"cancelled": "Підключення Google скасовано. Наявне підключення не змінено.",
 		"callbackFailed": "Не вдалося підключити Google. Спробуйте ще раз.",
 		"connectionError": "Не вдалося перевірити підключення Gmail. Спробуйте ще раз.",
-		"disconnectedNotice": "Gmail відключено."
+		"disconnectedNotice": "Gmail відключено.",
+		"invalidDetails": "Перевірте дані облікового запису та спробуйте ще раз.",
+		"googleRequestRejected": "Google не зміг виконати цей запит. Спробуйте ще раз.",
+		"googleConflict": "Не вдалося оновити підключення Google. Спробуйте ще раз.",
+		"googleDisconnectPending": "Відключення Gmail ще триває. Зачекайте та спробуйте ще раз."
 	},
 	"dashboard": {
 		"dashboard": "Панель",
 		"navigation": "Навігація робочого простору",
-		"workspace": "Ваш робочий простір",
-		"title": "Ваша панель",
-		"description": "Керуйте обліковим записом і підключіть Gmail до myMail.",
-		"account": "Дані облікового запису",
-		"accountDescription": "Ваш обліковий запис myMail",
-		"signedIn": "Вхід виконано",
-		"control": "Ви керуєте доступом",
-		"controlDescription": "Виберіть обліковий запис Google для підключення. Ви можете відключити його будь-коли.",
-		"footer": "Ваш особистий поштовий простір",
+
 		"googleDescription": "Підключіть обліковий запис Google, щоб розпочати.",
-		"connectTitle": "Ваша пошта починається тут",
-		"connectedTitle": "Ваш Gmail підключено",
 		"connectedDescription": "Керуйте підключеним обліковим записом Google нижче.",
 		"googleAccount": "Обліковий запис Google",
-		"readOnly": "Gmail лише для читання",
-		"privateConnection": "Ваш пароль Google залишається в Google.",
 		"connected": "Підключено",
 		"disconnected": "Не підключено",
 		"reconnect": "Потребує уваги",
 		"checking": "Перевірка підключення",
 		"unavailable": "Недоступно",
-		"connectionError": "Не вдалося перевірити"
+		"connectionError": "Не вдалося перевірити",
+		"emailUnavailable": "Адреса електронної пошти недоступна"
 	}
 }

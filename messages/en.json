@@ -36,9 +36,6 @@
 		"loggingOut": "Logging out…",
 		"retry": "Try again",
 		"accountError": "We could not load your account. You can retry or log out.",
-		"gmail": "Gmail connection",
-		"gmailUnavailable": "Gmail connection is not available yet.",
-		"consent": "Connect Google to let myMail read your Gmail messages. This does not grant permission to send or delete mail. You can disconnect at any time.",
 		"connect": "Connect Google",
 		"reconnect": "Reconnect Google",
 		"disconnect": "Disconnect Gmail",
@@ -51,32 +48,25 @@
 		"cancelled": "Google connection was cancelled. Your existing connection was not changed.",
 		"callbackFailed": "Google connection could not be completed. Please try connecting again.",
 		"connectionError": "We could not check your Gmail connection. Please try again.",
-		"disconnectedNotice": "Gmail has been disconnected."
+		"disconnectedNotice": "Gmail has been disconnected.",
+		"invalidDetails": "Check your account details and try again.",
+		"googleRequestRejected": "Google could not complete this request. Please try again.",
+		"googleConflict": "The Google connection could not be updated. Please try again.",
+		"googleDisconnectPending": "Gmail disconnection is still being completed. Please wait and try again."
 	},
 	"dashboard": {
 		"dashboard": "Dashboard",
 		"navigation": "Workspace navigation",
-		"workspace": "Your workspace",
-		"title": "Your dashboard",
-		"description": "Manage your account and bring your Gmail into myMail.",
-		"account": "Account details",
-		"accountDescription": "Your myMail account",
-		"signedIn": "Signed in",
-		"control": "You’re in control",
-		"controlDescription": "Choose which Google account to connect. You can disconnect it whenever you like.",
-		"footer": "Your personal mail workspace",
+
 		"googleDescription": "Connect your Google account to get started.",
-		"connectTitle": "Your inbox starts here",
-		"connectedTitle": "Your Gmail is connected",
 		"connectedDescription": "Manage your connected Google account below.",
 		"googleAccount": "Google account",
-		"readOnly": "Read-only Gmail access",
-		"privateConnection": "Your Google password stays with Google.",
 		"connected": "Connected",
 		"disconnected": "Not connected",
 		"reconnect": "Needs attention",
 		"checking": "Checking connection",
 		"unavailable": "Unavailable",
-		"connectionError": "Could not check"
+		"connectionError": "Could not check",
+		"emailUnavailable": "Email address unavailable"
 	}
 }

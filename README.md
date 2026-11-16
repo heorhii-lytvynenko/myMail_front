@@ -133,7 +133,7 @@ When ready, configure server-only `FRONTEND_URL`, a 32-byte base64url `GOOGLE_OA
 
 Next.js creates PKCE, validates the authorization URL, and keeps a short-lived encrypted HttpOnly transaction cookie bound to the current application session. It validates callback state/session/expiry before calling authenticated backend completion. Gmail connection status, cancellation/errors, reconnection, and disconnection are displayed on the account page. Google credentials stay on the backend.
 
-The required backend endpoints and complete request/response schemas are in [docs/backend-sync-prompt.md](docs/backend-sync-prompt.md). Deploy compatible backend endpoints first, configure the callback, then deploy/enable the frontend feature. Do not share the frontend cookie encryption secret with the backend.
+The current frontend/backend route mapping and response compatibility notes are in [docs/backend-api-routes.md](docs/backend-api-routes.md). The backend synchronization requirements are in [docs/backend-sync-prompt.md](docs/backend-sync-prompt.md). Deploy compatible backend endpoints first, configure the callback, then deploy/enable the frontend feature. Do not share the frontend cookie encryption secret with the backend.
 
 ## Verification
 

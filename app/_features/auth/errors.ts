@@ -7,6 +7,9 @@ export function errorCopy(code: string, t: (key: AuthMessage) => string) {
     INVALID_CREDENTIALS: 'invalidCredentials', ACCOUNT_EXISTS: 'accountExists',
     REGISTRATION_REJECTED: 'registrationRejected', RATE_LIMITED: 'rateLimited',
     FORBIDDEN: 'forbidden', SESSION_EXPIRED: 'expired',
+    VALIDATION_ERROR: 'invalidDetails', GOOGLE_UNAVAILABLE: 'unavailable',
+    GOOGLE_REQUEST_REJECTED: 'googleRequestRejected', GOOGLE_CONFLICT: 'googleConflict',
+    DISCONNECT_PENDING: 'googleDisconnectPending',
   }
-  return t(messages[code] ?? 'unavailable')
+  return t(Object.hasOwn(messages, code) ? messages[code] : 'unavailable')
 }

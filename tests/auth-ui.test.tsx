@@ -8,6 +8,7 @@ import { ConnectGoogleButton } from '../app/_features/google-integration/ui/Conn
 import { LogoutButton } from '../app/_features/auth/LogoutButton'
 import { GMAIL_SCOPE } from '../app/_features/google-integration/contracts'
 import { AccountDashboard } from '../app/_features/dashboard/AccountDashboard'
+import { AccountFailure } from '../app/_features/auth/AccountFailure'
 import { renderWithIntl as render } from './render'
 
 const navigation = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn() }))
@@ -16,13 +17,46 @@ const fetchMock = vi.fn<typeof fetch>()
 beforeEach(() => { vi.stubGlobal('fetch', fetchMock); fetchMock.mockReset(); navigation.replace.mockReset(); navigation.refresh.mockReset() })
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
+it.each(['login', 'register'] as const)('renders one complete %s form with masked passwords', mode => {
+  const { container } = render(<AuthForm mode={mode} />)
+  expect(screen.getAllByRole('main')).toHaveLength(1)
+  expect(container.querySelectorAll('form')).toHaveLength(1)
+  expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+  expect(screen.getByLabelText('Email')).toBeRequired()
+  expect(screen.getByLabelText('Password', { exact: true })).toHaveAttribute('type', 'password')
+  if (mode === 'register') {
+    expect(screen.getByLabelText('Confirm password')).toHaveAttribute('type', 'password')
+    expect(screen.getByLabelText('Password', { exact: true })).toHaveAccessibleDescription('Use at least 8 characters. Spaces are preserved.')
+  } else {
+    expect(screen.queryByLabelText('Confirm password')).toBeNull()
+  }
+})
+
 it('announces field-specific registration errors and focuses the first invalid input', async () => {
   render(<AuthForm mode="register" />)
   fireEvent.submit(screen.getByRole('button', { name: 'Create account' }).closest('form')!)
   expect(await screen.findByText('Enter a valid email address.')).toBeVisible()
   expect(screen.getByLabelText('Email')).toHaveFocus()
   expect(screen.getByLabelText('Password', { exact: true })).toHaveAttribute('aria-invalid', 'true')
+  expect(screen.getByLabelText('Email')).toHaveAccessibleDescription('Enter a valid email address.')
   expect(fetchMock).not.toHaveBeenCalled()
+})
+it('allows registration after correcting a mismatched confirmation', async () => {
+  fetchMock.mockResolvedValue(Response.json({ ok: true }))
+  render(<AuthForm mode='register' />)
+  fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'review@example.com' } })
+  fireEvent.change(screen.getByLabelText('Password', { exact: true }), { target: { value: 'long-password' } })
+  fireEvent.change(screen.getByLabelText('Confirm password'), { target: { value: 'different-password' } })
+  const form = screen.getByRole('button', { name: 'Create account' }).closest('form')!
+  fireEvent.submit(form)
+  expect(await screen.findByText('Passwords do not match.')).toBeVisible()
+  expect(screen.getByLabelText('Confirm password')).toHaveFocus()
+  expect(fetchMock).not.toHaveBeenCalled()
+  fireEvent.change(screen.getByLabelText('Confirm password'), { target: { value: 'long-password' } })
+  fireEvent.submit(form)
+  await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith('/account'))
+  expect(fetchMock).toHaveBeenCalledTimes(1)
+  expect(fetchMock.mock.calls[0][0]).toBe('/api/auth/register')
 })
 it('preserves locale and prevents simultaneous login submissions', async () => {
   let finish!: (value: Response) => void
@@ -34,6 +68,8 @@ it('preserves locale and prevents simultaneous login submissions', async () => {
   fireEvent.submit(form); fireEvent.submit(form)
   expect(fetchMock).toHaveBeenCalledTimes(1)
   expect(screen.getByRole('button', { name: 'Proszę czekać…' })).toBeDisabled()
+  expect(screen.getByLabelText('E-mail')).toBeDisabled()
+  expect(screen.getByLabelText('Hasło')).toBeDisabled()
   finish(Response.json({ ok: true }))
   await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith('/pl/account'))
   expect(JSON.parse(fetchMock.mock.calls[0][1]!.body as string).password).toBe(' password ')
@@ -46,7 +82,17 @@ it('recovers submission state and announces invalid credentials', async () => {
   await user.type(screen.getByLabelText('Password'), 'wrong-password')
   await user.click(screen.getByRole('button', { name: 'Log in' }))
   expect(await screen.findByRole('alert')).toHaveTextContent('Incorrect email or password.')
+  expect(screen.getByRole('alert')).toHaveFocus()
   expect(screen.getByRole('button', { name: 'Log in' })).toBeEnabled()
+})
+it('uses the shared error screen to retry loading the account', async () => {
+  const retry = vi.fn()
+  render(<AccountFailure retry={retry} />)
+  expect(screen.getByRole('heading', { level: 1, name: 'Your account' })).toBeVisible()
+  expect(screen.getByRole('alert')).toHaveTextContent('We could not load your account.')
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Try again' }))
+  expect(retry).toHaveBeenCalledTimes(1)
+  expect(screen.getByRole('button', { name: 'Log out' })).toBeEnabled()
 })
 it('does not expose an arbitrary error body when the service is unavailable', async () => {
   fetchMock.mockResolvedValue(new Response('upstream internal secret', { status: 502 }))
@@ -59,7 +105,7 @@ it('does not expose an arbitrary error body when the service is unavailable', as
 })
 it('keeps Gmail disabled without making backend requests', () => {
   render(<ConnectGoogleButton enabled={false} />)
-  expect(screen.getByText('Gmail connection is not available yet.')).toBeVisible()
+  expect(screen.getByRole('status')).toHaveTextContent('Unavailable')
   expect(fetchMock).not.toHaveBeenCalled()
 })
 it('uses backend status rather than a success query parameter to claim a connection', async () => {
@@ -99,7 +145,7 @@ it('logs out through the same-origin endpoint and preserves locale', async () =>
 
 it('shows the signed-in account and a disabled Google action while integration is unavailable', () => {
   render(<AccountDashboard email="review@example.com" googleEnabled={false} />)
-  expect(screen.getByRole('heading', { name: 'Your dashboard' })).toBeVisible()
+  expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
   expect(screen.getByText('review@example.com')).toBeVisible()
   expect(screen.getByRole('button', { name: 'Connect Google' })).toBeDisabled()
   expect(fetchMock).not.toHaveBeenCalled()
@@ -108,7 +154,7 @@ it('shows the signed-in account and a disabled Google action while integration i
 it('localizes the dashboard and preserves account navigation', async () => {
   fetchMock.mockResolvedValue(Response.json({ status: 'disconnected' }))
   render(<AccountDashboard email="review@example.com" locale="pl" googleEnabled />, 'pl')
-  expect(screen.getByRole('heading', { name: 'Twój pulpit' })).toBeVisible()
+  expect(screen.getByRole('heading', { name: 'Pulpit' })).toBeVisible()
   expect(screen.getByRole('link', { name: 'Pulpit' })).toHaveAttribute('href', '/pl/account')
   expect(await screen.findByRole('button', { name: 'Połącz Google' })).toBeEnabled()
 })
@@ -138,4 +184,22 @@ it('returns an expired Google session to the localized login page', async () => 
   fetchMock.mockResolvedValue(Response.json({ code: 'SESSION_EXPIRED' }, { status: 401 }))
   render(<ConnectGoogleButton locale="ua" enabled />, 'ua')
   await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith('/ua/login?reason=session-expired'))
+})
+
+it('shows a connected account without claiming unreported email or permissions', async () => {
+  fetchMock.mockResolvedValue(Response.json({ status: 'connected', email: null }))
+  render(<ConnectGoogleButton enabled />)
+  expect(await screen.findByRole('button', { name: 'Disconnect Gmail' })).toBeEnabled()
+  expect(screen.getByText('Email address unavailable')).toBeVisible()
+  expect(screen.queryByText('Read-only Gmail access')).toBeNull()
+  expect(screen.queryByRole('button', { name: 'Connect Google' })).toBeNull()
+})
+
+it('explains a pending backend disconnection without exposing provider details', async () => {
+  fetchMock.mockResolvedValueOnce(Response.json({ status: 'disconnected' }))
+  fetchMock.mockResolvedValueOnce(Response.json({ code: 'DISCONNECT_PENDING' }, { status: 409 }))
+  render(<ConnectGoogleButton enabled />)
+  await userEvent.setup().click(await screen.findByRole('button', { name: 'Connect Google' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Gmail disconnection is still being completed.')
+  expect(screen.getByRole('button', { name: 'Connect Google' })).toBeEnabled()
 })

@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode } from 'react'
 import type { IconType } from '@shared/lib/const'
 import { cn } from '@shared/lib/utils'
-import { ErrorMessage } from '../ErrorMessage'
+import { ErrorMessage, type ErrorMessageProps } from '../ErrorMessage'
 import type { HelperTextProps } from '../HelperText'
 import { HelperText } from '../HelperText'
 import { Icon, type IconProps } from '../Icon'
@@ -9,6 +9,7 @@ import { Spinner } from '../Spinner'
 import { FiledIcon } from './ui/FiledIcon'
 
 export interface FieldProps {
+  id?: string
   name?: string
   error?: ReactNode
   label?: ReactNode | null
@@ -21,14 +22,17 @@ export interface FieldProps {
   children?: ReactNode
   translateError?: boolean
   slotProps?: {
-    root?: Omit<ComponentProps<'label'>, 'htmlFor'>
+    root?: ComponentProps<'div'>
+    label?: Omit<ComponentProps<'label'>, 'htmlFor'>
     iconLeft?: Omit<IconProps, 'name'>
     iconRight?: Omit<IconProps, 'name'>
     helperText?: HelperTextProps
+    error?: ErrorMessageProps
   }
 }
 
 export const Field = ({
+  id,
   name,
   error,
   label,
@@ -44,15 +48,18 @@ export const Field = ({
 }: FieldProps) => {
   const {
     root,
+    label: labelProps,
     iconLeft: iconLeftProps,
     iconRight: iconRightProps,
-    helperText: helperTextProps
+    helperText: helperTextProps,
+    error: errorProps
   } = slotProps ?? {}
   const { className, ...restProps } = root ?? {}
+  const { className: labelClassName, ...restLabelProps } = labelProps ?? {}
+  const fieldId = id ?? name
 
   return (
-    <label
-      htmlFor={name}
+    <div
       className={cn(
         'flex w-full flex-col gap-1 text-slate-700',
         loading && 'pointer-events-none',
@@ -63,9 +70,16 @@ export const Field = ({
       {...restProps}
     >
       {label && (
-        <p className='text-slate-900 text-sm font-medium'>
-          {label} {required && <span className='text-blue-700'>*</span>}
-        </p>
+        <div className='flex items-baseline gap-1'>
+          <label
+            htmlFor={fieldId}
+            className={cn('text-sm font-medium text-slate-900', labelClassName)}
+            {...restLabelProps}
+          >
+            {label}
+          </label>
+          {required && <span className='text-blue-700' aria-hidden='true'>*</span>}
+        </div>
       )}
 
       <div className='relative flex w-full grow'>
@@ -92,8 +106,8 @@ export const Field = ({
         {renderRight?.()}
       </div>
 
-      <HelperText {...helperTextProps}>{helperText}</HelperText>
-      <ErrorMessage hasTranslate={translateError}>{error}</ErrorMessage>
-    </label>
+      <HelperText id={fieldId ? `${fieldId}-hint` : undefined} {...helperTextProps}>{helperText}</HelperText>
+      <ErrorMessage id={fieldId ? `${fieldId}-error` : undefined} hasTranslate={translateError} {...errorProps}>{error}</ErrorMessage>
+    </div>
   )
 }
